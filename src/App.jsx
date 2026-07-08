@@ -37,6 +37,18 @@ export default function App() {
   const [showKo, setShowKo] = useState({}); // 번역 토글 {msgIndex: true}
   const recRef = useRef(null);
   const bottomRef = useRef(null);
+  const primedRef = useRef(false);
+
+  // iOS 사파리: 음성재생은 사용자 제스처 안에서 한 번 '깨워야' 이후 자동재생이 됨.
+  const primeTTS = useCallback(() => {
+    try {
+      if (!window.speechSynthesis || primedRef.current) return;
+      const u = new SpeechSynthesisUtterance(" ");
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+      primedRef.current = true;
+    } catch (e) {}
+  }, []);
 
   // 터널 URL 로드
   useEffect(() => {
@@ -58,6 +70,7 @@ export default function App() {
     try {
       if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
+      window.speechSynthesis.resume(); // iOS: 멈춤 상태 방지
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "en-US";
       const v = window.speechSynthesis.getVoices().find((x) => x.lang?.startsWith("en"));
@@ -85,6 +98,7 @@ export default function App() {
 
   // ── 대화 시작 ──
   const startScenario = async (sc) => {
+    primeTTS(); // 사용자 제스처 안에서 음성 깨우기 (iOS 자동재생용)
     setScenario(sc); setView("chat"); setMessages([]); setLoading(true); setInput("");
     try {
       const r = await fetchTurn([], sc);
@@ -100,6 +114,7 @@ export default function App() {
   const send = async (text) => {
     const t = (text ?? input).trim();
     if (!t || loading) return;
+    primeTTS();
     const userMsg = { role: "user", text: t };
     const next = [...messages, userMsg];
     setMessages(next); setInput(""); setLoading(true);
@@ -122,6 +137,7 @@ export default function App() {
   // ── 음성 인식 ──
   const toggleMic = () => {
     if (!HAS_STT) return;
+    primeTTS();
     if (listening) { recRef.current?.stop(); return; }
     const rec = new SR();
     rec.lang = "en-US";

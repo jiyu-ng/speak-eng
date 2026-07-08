@@ -20,26 +20,30 @@ const LEVELS = [
   { key: "advanced", label: "고급" },
 ];
 
-// ── 음성 인식 (Web Speech API, 지원 시에만) ──────────────────
-const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
-const HAS_STT = !!SR;
+// 녹음 지원 여부 (마이크로 발음평가). HTTPS + MediaRecorder 필요.
+const HAS_REC = typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia && typeof window.MediaRecorder !== "undefined";
+
+const scoreColor = (n) => (n >= 80 ? "#63c187" : n >= 60 ? "#e0b64a" : "#e8724a");
 
 export default function App() {
   const [apiBase, setApiBase] = useState(null);
   const [urlErr, setUrlErr] = useState(false);
-  const [view, setView] = useState("home"); // home | chat
+  const [view, setView] = useState("home");
   const [scenario, setScenario] = useState(null);
   const [level, setLevel] = useState("intermediate");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
-  const [listening, setListening] = useState(false);
-  const [showKo, setShowKo] = useState({}); // 번역 토글 {msgIndex: true}
-  const recRef = useRef(null);
+  const [recording, setRecording] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [showKo, setShowKo] = useState({});
   const bottomRef = useRef(null);
   const primedRef = useRef(false);
+  const mediaRef = useRef(null);
+  const chunksRef = useRef([]);
+  const streamRef = useRef(null);
 
-  // iOS 사파리: 음성재생은 사용자 제스처 안에서 한 번 '깨워야' 이후 자동재생이 됨.
+  // iOS: 음성재생은 사용자 제스처 안에서 한 번 '깨워야' 이후 자동재생됨.
   const primeTTS = useCallback(() => {
     try {
       if (!window.speechSynthesis || primedRef.current) return;
@@ -50,7 +54,6 @@ export default function App() {
     } catch (e) {}
   }, []);
 
-  // 터널 URL 로드
   useEffect(() => {
     (async () => {
       try {
@@ -63,14 +66,13 @@ export default function App() {
     })();
   }, []);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading, analyzing]);
 
-  // ── TTS ──
   const speak = useCallback((text) => {
     try {
       if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
-      window.speechSynthesis.resume(); // iOS: 멈춤 상태 방지
+      window.speechSynthesis.resume();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "en-US";
       const v = window.speechSynthesis.getVoices().find((x) => x.lang?.startsWith("en"));
@@ -80,49 +82,39 @@ export default function App() {
     } catch (e) {}
   }, []);
 
-  // ── 서버 호출 ──
   const fetchTurn = useCallback(async (history, scObj) => {
-    if (!apiBase) return null;
     const res = await fetch(`${apiBase}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        scenario: scObj.desc,
-        level,
-        messages: history.map((m) => ({ role: m.role, text: m.text })),
-      }),
+      body: JSON.stringify({ scenario: scObj.desc, level, messages: history.map((m) => ({ role: m.role, text: m.text })) }),
     });
     if (!res.ok) throw new Error("bad response");
     return res.json();
   }, [apiBase, level]);
 
-  // ── 대화 시작 ──
   const startScenario = async (sc) => {
-    primeTTS(); // 사용자 제스처 안에서 음성 깨우기 (iOS 자동재생용)
+    primeTTS();
     setScenario(sc); setView("chat"); setMessages([]); setLoading(true); setInput("");
     try {
       const r = await fetchTurn([], sc);
-      const m = { role: "assistant", text: r.reply, ko: r.ko };
-      setMessages([m]);
+      setMessages([{ role: "assistant", text: r.reply, ko: r.ko }]);
       speak(r.reply);
     } catch (e) {
       setMessages([{ role: "assistant", text: "(연결이 잠깐 불안정해요. 서버가 깨어나는 중일 수 있어요 — 잠시 후 다시 시도해 주세요.)", ko: "", error: true }]);
     } finally { setLoading(false); }
   };
 
-  // ── 메시지 전송 ──
-  const send = async (text) => {
+  // 유저 메시지 추가 + AI 응답 (pron: 발음평가 결과 있으면 붙임)
+  const send = async (text, pron = null) => {
     const t = (text ?? input).trim();
     if (!t || loading) return;
     primeTTS();
-    const userMsg = { role: "user", text: t };
-    const next = [...messages, userMsg];
+    const next = [...messages, { role: "user", text: t, pron }];
     setMessages(next); setInput(""); setLoading(true);
     try {
       const r = await fetchTurn(next, scenario);
       setMessages((prev) => {
         const copy = [...prev];
-        // 마지막 user 메시지에 교정 붙이기
         for (let i = copy.length - 1; i >= 0; i--) {
           if (copy[i].role === "user") { copy[i] = { ...copy[i], correction: r.correction }; break; }
         }
@@ -134,24 +126,57 @@ export default function App() {
     } finally { setLoading(false); }
   };
 
-  // ── 음성 인식 ──
-  const toggleMic = () => {
-    if (!HAS_STT) return;
+  // ── 녹음 → 발음평가 ──
+  const startRec = async () => {
+    if (!HAS_REC || recording || analyzing || loading) return;
     primeTTS();
-    if (listening) { recRef.current?.stop(); return; }
-    const rec = new SR();
-    rec.lang = "en-US";
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-    rec.onresult = (e) => { const txt = e.results[0][0].transcript; setInput(txt); setTimeout(() => send(txt), 200); };
-    rec.onerror = () => setListening(false);
-    rec.onend = () => setListening(false);
-    recRef.current = rec;
-    setListening(true);
-    rec.start();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      const mr = new MediaRecorder(stream);
+      mr.ondataavailable = (e) => { if (e.data.size) chunksRef.current.push(e.data); };
+      mr.onstop = () => onRecStop(mr.mimeType);
+      mediaRef.current = mr;
+      mr.start();
+      setRecording(true);
+    } catch (e) {
+      alert("마이크를 사용할 수 없어요. 권한을 허용했는지 확인해 주세요. (또는 타이핑으로 답할 수 있어요)");
+    }
   };
 
-  // ── 렌더 ──
+  const stopRec = () => {
+    if (!recording) return;
+    try { mediaRef.current?.stop(); } catch (e) {}
+    setRecording(false);
+  };
+
+  const onRecStop = async (mime) => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    const blob = new Blob(chunksRef.current, { type: mime || "audio/webm" });
+    if (!blob.size) return;
+    setAnalyzing(true);
+    try {
+      const res = await fetch(`${apiBase}/pronounce`, {
+        method: "POST",
+        headers: { "Content-Type": "application/octet-stream" },
+        body: blob,
+      });
+      const r = await res.json();
+      setAnalyzing(false);
+      if (r.error || r.noMatch || !r.text) {
+        alert(r.noMatch || !r.text ? "말이 잘 안 들렸어요. 다시 또박또박 말해볼까요? (타이핑도 OK)" : r.error);
+        return;
+      }
+      // 인식된 문장 + 발음점수를 유저 메시지로, 이어서 AI 응답
+      send(r.text, { accuracy: r.accuracy, fluency: r.fluency, prosody: r.prosody, pron: r.pron, words: r.words || [] });
+    } catch (e) {
+      setAnalyzing(false);
+      alert("발음 분석에 실패했어요. 다시 시도해 주세요.");
+    }
+  };
+
+  // ── 렌더: 홈 ──
   if (view === "home") {
     return (
       <div style={wrap}>
@@ -160,19 +185,15 @@ export default function App() {
           <h1 style={h1}>스픽메이트</h1>
           <p style={sub}>AI 파트너랑 영어로 대화하며 스피킹 연습</p>
         </header>
-
         {urlErr && <div style={banner}>⚠️ 회화 서버 주소를 못 불러왔어요. 잠시 후 새로고침해 주세요.</div>}
-
         <section style={{ marginBottom: 18 }}>
           <p style={sectionLabel}>난이도</p>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, padding: "0 18px" }}>
             {LEVELS.map((l) => (
-              <button key={l.key} onClick={() => setLevel(l.key)}
-                style={{ ...levelBtn, ...(level === l.key ? levelOn : {}) }}>{l.label}</button>
+              <button key={l.key} onClick={() => setLevel(l.key)} style={{ ...levelBtn, ...(level === l.key ? levelOn : {}) }}>{l.label}</button>
             ))}
           </div>
         </section>
-
         <section>
           <p style={sectionLabel}>상황 고르기</p>
           <div style={grid}>
@@ -190,7 +211,7 @@ export default function App() {
     );
   }
 
-  // 채팅 화면
+  // ── 렌더: 채팅 ──
   return (
     <div style={wrap}>
       <header style={chatHead}>
@@ -222,36 +243,73 @@ export default function App() {
             ) : (
               <div style={userRow}>
                 <div style={userBubble}>{m.text}</div>
+                {m.pron && <PronCard p={m.pron} />}
                 {m.correction && <div style={correctionBox}>💡 {m.correction}</div>}
               </div>
             )}
           </div>
         ))}
+        {analyzing && <div style={userRow}><div style={{ ...userBubble, background: "#2a2f47", color: "#a8adc4" }}>🎧 발음 분석 중…</div></div>}
         {loading && <div style={aiRow}><div style={{ ...aiBubble, color: "#8b90a6" }}>…</div></div>}
         <div ref={bottomRef} />
       </div>
 
       <div style={inputBar}>
-        {HAS_STT && (
-          <button onClick={toggleMic} style={{ ...micBtn, ...(listening ? micOn : {}) }} title="말하기">
-            {listening ? "●" : "🎤"}
+        {HAS_REC && (
+          <button onClick={recording ? stopRec : startRec} disabled={analyzing || loading}
+            style={{ ...micBtn, ...(recording ? micOn : {}) }} title="녹음해서 발음 평가">
+            {recording ? "■" : "🎤"}
           </button>
         )}
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder={listening ? "듣는 중…" : "영어로 답해보세요"}
-          style={textInput}
-        />
-        <button onClick={() => send()} disabled={loading || !input.trim()} style={sendBtn}>↑</button>
+        <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
+          placeholder={recording ? "녹음 중… ■ 눌러 끝내기" : "영어로 답하기 (또는 🎤 말하기)"} style={textInput} disabled={recording} />
+        <button onClick={() => send()} disabled={loading || analyzing || !input.trim()} style={sendBtn}>↑</button>
       </div>
-      {!HAS_STT && <p style={sttNote}>ℹ️ 이 브라우저는 음성인식이 안 돼서 타이핑으로 답해요. (크롬/안드로이드는 마이크 지원)</p>}
+      <p style={sttNote}>
+        {HAS_REC ? "🎤 마이크로 말하면 AI가 발음까지 분석해줘요 · 타이핑도 OK" : "ℹ️ 이 브라우저는 녹음이 안 돼서 타이핑으로 답해요."}
+      </p>
     </div>
   );
 }
 
-// ── 스타일 ─────────────────────────────────────────────────
+// 발음 점수 카드
+function PronCard({ p }) {
+  return (
+    <div style={pronCard}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+        <span style={{ fontSize: 12, color: "#8b90a6", fontWeight: 700 }}>발음 점수</span>
+        <span style={{ fontSize: 22, fontWeight: 800, color: scoreColor(p.pron) }}>{p.pron}</span>
+        <span style={{ fontSize: 12, color: "#8b90a6" }}>/ 100</span>
+      </div>
+      <div style={{ display: "flex", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
+        <Metric label="정확도" v={p.accuracy} />
+        <Metric label="유창성" v={p.fluency} />
+        {p.prosody != null && <Metric label="억양" v={p.prosody} />}
+      </div>
+      {p.words?.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {p.words.map((w, i) => (
+            <span key={i} style={{ fontSize: 13, fontWeight: 600, padding: "2px 8px", borderRadius: 7, background: "#1c2136", color: scoreColor(w.accuracy ?? 100) }}>
+              {w.word}{w.errorType && w.errorType !== "None" ? " ⚠️" : ""}
+            </span>
+          ))}
+        </div>
+      )}
+      <p style={{ fontSize: 11, color: "#6b7089", margin: "8px 0 0" }}>⚠️ 표시 단어는 발음을 더 또렷하게 해보세요</p>
+    </div>
+  );
+}
+
+function Metric({ label, v }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 52 }}>
+      <span style={{ fontSize: 15, fontWeight: 800, color: scoreColor(v) }}>{v}</span>
+      <span style={{ fontSize: 10.5, color: "#8b90a6" }}>{label}</span>
+    </div>
+  );
+}
+
+// ── 스타일 ──
 const wrap = { minHeight: "100vh", maxWidth: 560, margin: "0 auto", background: "#0f1220", color: "#eef0f7", fontFamily: '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif', display: "flex", flexDirection: "column" };
 const head = { textAlign: "center", padding: "30px 18px 10px" };
 const h1 = { fontSize: 26, fontWeight: 800, margin: "6px 0 4px" };
@@ -262,7 +320,6 @@ const levelBtn = { flex: 1, padding: "10px 0", borderRadius: 12, border: "1px so
 const levelOn = { background: "#4c6ef5", color: "#fff", borderColor: "#4c6ef5" };
 const grid = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "0 18px 30px" };
 const scCard = { display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textAlign: "center", padding: "16px 8px", borderRadius: 16, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", cursor: "pointer" };
-
 const chatHead = { display: "flex", alignItems: "center", padding: "16px 14px", borderBottom: "1px solid #1e2233", position: "sticky", top: 0, background: "#0f1220", zIndex: 2 };
 const backBtn = { width: 34, height: 34, borderRadius: 10, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", fontSize: 18, cursor: "pointer" };
 const chatBody = { flex: 1, overflowY: "auto", padding: "16px 14px 8px", display: "flex", flexDirection: "column", gap: 14 };
@@ -272,6 +329,7 @@ const koText = { marginTop: 6, fontSize: 13.5, color: "#a8adc4", borderTop: "1px
 const miniAction = { background: "none", border: "none", color: "#7f9cf5", fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: 0 };
 const userRow = { display: "flex", flexDirection: "column", alignItems: "flex-end" };
 const userBubble = { maxWidth: "82%", background: "#4c6ef5", color: "#fff", borderRadius: "16px 4px 16px 16px", padding: "12px 14px", fontSize: 16 };
+const pronCard = { maxWidth: "82%", marginTop: 6, background: "#161a2b", border: "1px solid #262a3d", borderRadius: 14, padding: "12px 14px" };
 const correctionBox = { maxWidth: "82%", marginTop: 6, background: "#20261c", color: "#c7e7a8", border: "1px solid #33421f", borderRadius: 12, padding: "9px 12px", fontSize: 13, lineHeight: 1.5 };
 const inputBar = { display: "flex", gap: 8, alignItems: "center", padding: "12px 14px", borderTop: "1px solid #1e2233", position: "sticky", bottom: 0, background: "#0f1220" };
 const micBtn = { width: 44, height: 44, flexShrink: 0, borderRadius: 999, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", fontSize: 18, cursor: "pointer" };

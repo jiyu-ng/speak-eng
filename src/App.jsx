@@ -3,13 +3,29 @@ import { supabase, SPEAK_CONFIG_ROW } from "./supabase.js";
 
 // ── 시나리오 (원본, 저작권 프리) ─────────────────────────────
 const SCENARIOS = [
+  // 여행
   { key: "cafe",     emoji: "☕", label: "카페에서 주문", desc: "카페에서 커피·디저트 주문하기" },
-  { key: "airport",  emoji: "✈️", label: "공항 체크인", desc: "공항 카운터에서 체크인하고 짐 부치기" },
-  { key: "directions", emoji: "🗺️", label: "길 묻기", desc: "길을 잃고 행인에게 길 물어보기" },
-  { key: "hotel",    emoji: "🏨", label: "호텔 체크인", desc: "호텔 프런트에서 체크인하기" },
   { key: "restaurant", emoji: "🍽️", label: "식당에서", desc: "식당에서 자리 잡고 음식 주문하기" },
+  { key: "airport",  emoji: "✈️", label: "공항 체크인", desc: "공항 카운터에서 체크인하고 짐 부치기" },
+  { key: "hotel",    emoji: "🏨", label: "호텔 체크인", desc: "호텔 프런트에서 체크인하기" },
+  { key: "directions", emoji: "🗺️", label: "길 묻기", desc: "길을 잃고 행인에게 길 물어보기" },
+  { key: "taxi",     emoji: "🚕", label: "택시 타기", desc: "택시/우버에서 목적지 말하고 대화하기" },
   { key: "shopping", emoji: "🛍️", label: "쇼핑", desc: "옷 가게에서 물건 고르고 사기" },
+  { key: "sightsee", emoji: "📸", label: "관광 안내소", desc: "관광 안내소에서 볼거리 물어보기" },
+  { key: "carrental", emoji: "🚗", label: "렌터카", desc: "렌터카 빌리고 조건 확인하기" },
+  // 생활
+  { key: "pharmacy", emoji: "💊", label: "약국·병원", desc: "약국이나 병원에서 증상 설명하기" },
+  { key: "bank",     emoji: "🏦", label: "은행 업무", desc: "은행에서 계좌·환전 등 처리하기" },
+  { key: "phone",    emoji: "📞", label: "전화 통화", desc: "예약·문의 전화 걸어서 대화하기" },
+  { key: "complaint", emoji: "🧾", label: "환불·컴플레인", desc: "물건 교환·환불이나 불만 제기하기" },
+  { key: "salon",    emoji: "💇", label: "미용실", desc: "미용실에서 원하는 스타일 말하기" },
+  { key: "housing",  emoji: "🏠", label: "집 구하기", desc: "부동산에서 방·집 조건 물어보기" },
+  // 사람·일
   { key: "smalltalk", emoji: "💬", label: "가벼운 잡담", desc: "날씨·취미·주말 이야기 같은 스몰토크" },
+  { key: "makeplans", emoji: "📅", label: "약속 잡기", desc: "친구랑 만날 약속·계획 잡기" },
+  { key: "date",     emoji: "💕", label: "소개팅·데이트", desc: "처음 만난 사람과 가볍게 대화하기" },
+  { key: "meeting",  emoji: "🧑‍💻", label: "직장 회의", desc: "회의에서 의견 나누고 발표하기" },
+  { key: "networking", emoji: "🤝", label: "네트워킹", desc: "행사에서 자기소개하고 인맥 만들기" },
   { key: "interview", emoji: "🧑‍💼", label: "영어 면접", desc: "간단한 영어 면접 연습" },
   { key: "free",     emoji: "🎲", label: "자유 대화", desc: "주제 없이 자유롭게 대화하기" },
 ];
@@ -25,6 +41,10 @@ const HAS_REC = typeof window !== "undefined" && !!navigator.mediaDevices?.getUs
 
 const scoreColor = (n) => (n >= 80 ? "#63c187" : n >= 60 ? "#e0b64a" : "#e8724a");
 
+// ── 화면 잠금 (PIN) ── 화면 가림막용. 통과 시 그 기기에선 다음부터 자동.
+const PIN = "0211";
+const PIN_KEY = "speak_unlocked_v1";
+
 export default function App() {
   const [apiBase, setApiBase] = useState(null);
   const [urlErr, setUrlErr] = useState(false);
@@ -37,6 +57,9 @@ export default function App() {
   const [recording, setRecording] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [showKo, setShowKo] = useState({});
+  const [unlocked, setUnlocked] = useState(() => {
+    try { return localStorage.getItem(PIN_KEY) === "1"; } catch (e) { return false; }
+  });
   const bottomRef = useRef(null);
   const primedRef = useRef(false);
   const mediaRef = useRef(null);
@@ -75,7 +98,14 @@ export default function App() {
       window.speechSynthesis.resume();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "en-US";
-      const v = window.speechSynthesis.getVoices().find((x) => x.lang?.startsWith("en"));
+      // 미국 발음(en-US) 목소리 우선 선택 — 영국(en-GB)으로 잡히는 것 방지
+      const voices = window.speechSynthesis.getVoices();
+      const norm = (x) => (x || "").replace("_", "-");
+      const v =
+        voices.find((x) => norm(x.lang) === "en-US" && /US|American|Samantha|Aaron|Nicky|Fred|Alex|Ava|Allison|Susan|Zoe/i.test(x.name)) ||
+        voices.find((x) => norm(x.lang) === "en-US") ||
+        voices.find((x) => norm(x.lang).startsWith("en-US")) ||
+        voices.find((x) => norm(x.lang).startsWith("en"));
       if (v) u.voice = v;
       u.rate = 0.95;
       window.speechSynthesis.speak(u);
@@ -175,6 +205,11 @@ export default function App() {
       alert("발음 분석에 실패했어요. 다시 시도해 주세요.");
     }
   };
+
+  // ── 화면 잠금 ──
+  if (!unlocked) {
+    return <PinGate onOk={() => { try { localStorage.setItem(PIN_KEY, "1"); } catch (e) {} setUnlocked(true); }} />;
+  }
 
   // ── 렌더: 홈 ──
   if (view === "home") {
@@ -308,6 +343,42 @@ function Metric({ label, v }) {
     </div>
   );
 }
+
+// 화면 잠금 PIN 입력
+function PinGate({ onOk }) {
+  const [pin, setPin] = useState("");
+  const [shake, setShake] = useState(false);
+  const press = (d) => {
+    if (pin.length >= 4) return;
+    const np = pin + d;
+    setPin(np);
+    if (np.length === 4) {
+      if (np === PIN) setTimeout(onOk, 120);
+      else setTimeout(() => { setShake(true); setPin(""); setTimeout(() => setShake(false), 400); }, 120);
+    }
+  };
+  return (
+    <div style={{ ...wrap, alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+      <div style={{ fontSize: 40 }}>🔒</div>
+      <p style={{ color: "#8b90a6", fontSize: 14, margin: "10px 0 22px" }}>PIN을 입력하세요</p>
+      <div style={{ display: "flex", gap: 14, marginBottom: 30, transform: shake ? "translateX(0)" : "none", animation: shake ? "sh .4s" : "none" }}>
+        {[0, 1, 2, 3].map((i) => (
+          <span key={i} style={{ width: 14, height: 14, borderRadius: 999, background: i < pin.length ? "#4c6ef5" : "#262a3d" }} />
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 68px)", gap: 14 }}>
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+          <button key={n} onClick={() => press(String(n))} style={pinKey}>{n}</button>
+        ))}
+        <span />
+        <button onClick={() => press("0")} style={pinKey}>0</button>
+        <button onClick={() => setPin((p) => p.slice(0, -1))} style={{ ...pinKey, fontSize: 20, background: "transparent", border: "none" }}>⌫</button>
+      </div>
+      <style>{`@keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}`}</style>
+    </div>
+  );
+}
+const pinKey = { width: 68, height: 68, borderRadius: 999, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", fontSize: 24, fontWeight: 700, cursor: "pointer" };
 
 // ── 스타일 ──
 const wrap = { minHeight: "100vh", maxWidth: 560, margin: "0 auto", background: "#0f1220", color: "#eef0f7", fontFamily: '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif', display: "flex", flexDirection: "column" };

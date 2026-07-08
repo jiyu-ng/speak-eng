@@ -36,6 +36,66 @@ const LEVELS = [
   { key: "advanced", label: "고급" },
 ];
 
+// ── 레슨 (일상 표현, 원본) ──────────────────────────────────
+const LESSONS = [
+  { id: "cafe", emoji: "☕", title: "카페 필수표현", desc: "음료 주문할 때", roleplay: "카페에서 커피 주문하기", phrases: [
+    { en: "I'd like a latte, please.", ko: "라떼 하나 주세요." },
+    { en: "For here or to go?", ko: "여기서 드세요, 가져가세요?" },
+    { en: "Can I get it iced?", ko: "아이스로 주시겠어요?" },
+    { en: "How much is it?", ko: "얼마예요?" },
+    { en: "Keep the change.", ko: "잔돈은 괜찮아요." },
+  ] },
+  { id: "intro", emoji: "👋", title: "자기소개", desc: "처음 만났을 때", roleplay: "처음 만난 사람과 자기소개하기", phrases: [
+    { en: "Nice to meet you.", ko: "만나서 반가워요." },
+    { en: "I'm from Korea.", ko: "저는 한국에서 왔어요." },
+    { en: "What do you do?", ko: "무슨 일 하세요?" },
+    { en: "How long have you been here?", ko: "여기 온 지 얼마나 됐어요?" },
+    { en: "Let's keep in touch.", ko: "앞으로 연락해요." },
+  ] },
+  { id: "restaurant", emoji: "🍽️", title: "식당에서", desc: "음식 주문·계산", roleplay: "식당에서 주문하고 계산하기", phrases: [
+    { en: "A table for two, please.", ko: "두 명 자리 부탁해요." },
+    { en: "Could I see the menu?", ko: "메뉴 좀 볼 수 있을까요?" },
+    { en: "What do you recommend?", ko: "뭐가 맛있어요?" },
+    { en: "I'll have this one.", ko: "이걸로 할게요." },
+    { en: "Could we get the check?", ko: "계산서 주시겠어요?" },
+  ] },
+  { id: "directions", emoji: "🗺️", title: "길 묻기", desc: "길 물어볼 때", roleplay: "길을 잃고 길 물어보기", phrases: [
+    { en: "How do I get to the station?", ko: "역에 어떻게 가나요?" },
+    { en: "Is it far from here?", ko: "여기서 먼가요?" },
+    { en: "Turn left at the corner.", ko: "모퉁이에서 왼쪽으로 도세요." },
+    { en: "How long does it take?", ko: "얼마나 걸려요?" },
+    { en: "Thank you for your help.", ko: "도와주셔서 감사해요." },
+  ] },
+  { id: "smalltalk", emoji: "💬", title: "스몰토크", desc: "가벼운 대화", roleplay: "가벼운 스몰토크 나누기", phrases: [
+    { en: "How's your day going?", ko: "오늘 하루 어때요?" },
+    { en: "Any plans for the weekend?", ko: "주말에 계획 있어요?" },
+    { en: "The weather's lovely today.", ko: "오늘 날씨 좋네요." },
+    { en: "It was nice talking to you.", ko: "얘기 즐거웠어요." },
+    { en: "Let's catch up soon.", ko: "조만간 또 봐요." },
+  ] },
+  { id: "airport", emoji: "✈️", title: "공항·여행", desc: "공항에서", roleplay: "공항에서 체크인하고 이동하기", phrases: [
+    { en: "I'd like to check in, please.", ko: "체크인 하려고요." },
+    { en: "Here's my passport.", ko: "여기 여권이요." },
+    { en: "Where's the boarding gate?", ko: "탑승구가 어디예요?" },
+    { en: "I have nothing to declare.", ko: "신고할 것 없어요." },
+    { en: "Where can I find a taxi?", ko: "택시는 어디서 타요?" },
+  ] },
+  { id: "shopping", emoji: "🛍️", title: "쇼핑", desc: "물건 살 때", roleplay: "가게에서 옷 사기", phrases: [
+    { en: "Can I try this on?", ko: "이거 입어봐도 돼요?" },
+    { en: "Do you have a smaller size?", ko: "더 작은 사이즈 있어요?" },
+    { en: "How much is this?", ko: "이거 얼마예요?" },
+    { en: "Do you take cards?", ko: "카드 되나요?" },
+    { en: "I'll take it.", ko: "이걸로 살게요." },
+  ] },
+  { id: "phone", emoji: "📞", title: "전화 표현", desc: "전화 통화", roleplay: "예약 전화 걸어서 대화하기", phrases: [
+    { en: "Hello, this is Jiyoo.", ko: "여보세요, 저 지유예요." },
+    { en: "Could I speak to the manager?", ko: "매니저와 통화할 수 있을까요?" },
+    { en: "Can I leave a message?", ko: "메시지 남길 수 있을까요?" },
+    { en: "Could you repeat that?", ko: "다시 말씀해 주시겠어요?" },
+    { en: "Thanks for your help.", ko: "도와주셔서 감사해요." },
+  ] },
+];
+
 // 녹음 지원 여부 (마이크로 발음평가). HTTPS + MediaRecorder 필요.
 const HAS_REC = typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia && typeof window.MediaRecorder !== "undefined";
 
@@ -54,9 +114,13 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
-  const [recording, setRecording] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [showKo, setShowKo] = useState({});
+  const [homeMode, setHomeMode] = useState("convo"); // convo | lesson
+  const [lesson, setLesson] = useState(null);
+  const [lessonScores, setLessonScores] = useState({}); // {phraseIdx: pronResult}
+  const [recActive, setRecActive] = useState(null); // null | "chat" | phraseIdx
+  const recTargetRef = useRef(null); // null=chat, or {idx, ref}
   const [unlocked, setUnlocked] = useState(() => {
     try { return localStorage.getItem(PIN_KEY) === "1"; } catch (e) { return false; }
   });
@@ -156,41 +220,42 @@ export default function App() {
     } finally { setLoading(false); }
   };
 
-  // ── 녹음 → 발음평가 ──
-  const startRec = async () => {
-    if (!HAS_REC || recording || analyzing || loading) return;
+  // ── 녹음 → 발음평가 (target: null=대화 / {idx, ref}=레슨 따라말하기) ──
+  const beginRec = async (target) => {
+    if (!HAS_REC || recActive !== null || analyzing || loading) return;
     primeTTS();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       chunksRef.current = [];
+      recTargetRef.current = target;
       const mr = new MediaRecorder(stream);
       mr.ondataavailable = (e) => { if (e.data.size) chunksRef.current.push(e.data); };
       mr.onstop = () => onRecStop(mr.mimeType);
       mediaRef.current = mr;
       mr.start();
-      setRecording(true);
+      setRecActive(target === null ? "chat" : target.idx);
     } catch (e) {
       alert("마이크를 사용할 수 없어요. 권한을 허용했는지 확인해 주세요. (또는 타이핑으로 답할 수 있어요)");
     }
   };
 
-  const stopRec = () => {
-    if (!recording) return;
+  const endRec = () => {
+    if (recActive === null) return;
     try { mediaRef.current?.stop(); } catch (e) {}
-    setRecording(false);
+    setRecActive(null);
   };
 
   const onRecStop = async (mime) => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     const blob = new Blob(chunksRef.current, { type: mime || "audio/webm" });
     if (!blob.size) return;
+    const target = recTargetRef.current;
     setAnalyzing(true);
     try {
-      const res = await fetch(`${apiBase}/pronounce`, {
-        method: "POST",
-        headers: { "Content-Type": "application/octet-stream" },
-        body: blob,
+      const q = target?.ref ? `?ref=${encodeURIComponent(target.ref)}` : "";
+      const res = await fetch(`${apiBase}/pronounce${q}`, {
+        method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: blob,
       });
       const r = await res.json();
       setAnalyzing(false);
@@ -198,12 +263,21 @@ export default function App() {
         alert(r.noMatch || !r.text ? "말이 잘 안 들렸어요. 다시 또박또박 말해볼까요? (타이핑도 OK)" : r.error);
         return;
       }
-      // 인식된 문장 + 발음점수를 유저 메시지로, 이어서 AI 응답
-      send(r.text, { accuracy: r.accuracy, fluency: r.fluency, prosody: r.prosody, pron: r.pron, words: r.words || [] });
+      if (target === null) {
+        send(r.text, { accuracy: r.accuracy, fluency: r.fluency, prosody: r.prosody, pron: r.pron, words: r.words || [] });
+      } else {
+        setLessonScores((s) => ({ ...s, [target.idx]: r }));
+      }
     } catch (e) {
       setAnalyzing(false);
       alert("발음 분석에 실패했어요. 다시 시도해 주세요.");
     }
+  };
+
+  const openLesson = (l) => { setLesson(l); setLessonScores({}); setView("lesson"); };
+  const startLessonRoleplay = () => {
+    if (!lesson) return;
+    startScenario({ key: "lesson-" + lesson.id, emoji: lesson.emoji, label: lesson.title + " 롤플레이", desc: lesson.roleplay });
   };
 
   // ── 화면 잠금 ──
@@ -221,27 +295,115 @@ export default function App() {
           <p style={sub}>AI 파트너랑 영어로 대화하며 스피킹 연습</p>
         </header>
         {urlErr && <div style={banner}>⚠️ 회화 서버 주소를 못 불러왔어요. 잠시 후 새로고침해 주세요.</div>}
-        <section style={{ marginBottom: 18 }}>
-          <p style={sectionLabel}>난이도</p>
-          <div style={{ display: "flex", gap: 8, padding: "0 18px" }}>
-            {LEVELS.map((l) => (
-              <button key={l.key} onClick={() => setLevel(l.key)} style={{ ...levelBtn, ...(level === l.key ? levelOn : {}) }}>{l.label}</button>
-            ))}
+
+        <div style={{ display: "flex", gap: 8, padding: "0 18px", marginBottom: 20 }}>
+          <button onClick={() => setHomeMode("convo")} style={{ ...modeTab, ...(homeMode === "convo" ? modeOn : {}) }}>💬 상황별 대화</button>
+          <button onClick={() => setHomeMode("lesson")} style={{ ...modeTab, ...(homeMode === "lesson" ? modeOn : {}) }}>📚 레슨</button>
+        </div>
+
+        {homeMode === "convo" ? (
+          <>
+            <section style={{ marginBottom: 18 }}>
+              <p style={sectionLabel}>난이도</p>
+              <div style={{ display: "flex", gap: 8, padding: "0 18px" }}>
+                {LEVELS.map((l) => (
+                  <button key={l.key} onClick={() => setLevel(l.key)} style={{ ...levelBtn, ...(level === l.key ? levelOn : {}) }}>{l.label}</button>
+                ))}
+              </div>
+            </section>
+            <section>
+              <p style={sectionLabel}>상황 고르기</p>
+              <div style={grid}>
+                {SCENARIOS.map((s) => (
+                  <button key={s.key} onClick={() => startScenario(s)} disabled={!apiBase} style={scCard}>
+                    <span style={{ fontSize: 26 }}>{s.emoji}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700 }}>{s.label}</span>
+                    <span style={{ fontSize: 11, color: "#8b90a6" }}>{s.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          </>
+        ) : (
+          <section>
+            <p style={sectionLabel}>주제 고르고 따라 말하기 연습해요</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "0 18px" }}>
+              {LESSONS.map((l) => (
+                <button key={l.id} onClick={() => openLesson(l)} disabled={!apiBase} style={lessonItem}>
+                  <span style={{ fontSize: 24 }}>{l.emoji}</span>
+                  <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", flex: 1 }}>
+                    <span style={{ fontSize: 15.5, fontWeight: 700 }}>{l.title}</span>
+                    <span style={{ fontSize: 12, color: "#8b90a6" }}>{l.desc} · {l.phrases.length}문장</span>
+                  </span>
+                  <span style={{ color: "#8b90a6" }}>›</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+        {!apiBase && !urlErr && <p style={{ textAlign: "center", color: "#8b90a6", fontSize: 13, marginTop: 16 }}>서버 연결 중…</p>}
+      </div>
+    );
+  }
+
+  // ── 렌더: 레슨 연습 ──
+  if (view === "lesson" && lesson) {
+    return (
+      <div style={wrap}>
+        <header style={chatHead}>
+          <button onClick={() => { window.speechSynthesis?.cancel(); setView("home"); }} style={backBtn}>←</button>
+          <div style={{ textAlign: "center", flex: 1 }}>
+            <div style={{ fontWeight: 800 }}>{lesson.emoji} {lesson.title}</div>
+            <div style={{ fontSize: 11, color: "#8b90a6" }}>따라 말하기 연습 · 스픽메이트</div>
           </div>
-        </section>
-        <section>
-          <p style={sectionLabel}>상황 고르기</p>
-          <div style={grid}>
-            {SCENARIOS.map((s) => (
-              <button key={s.key} onClick={() => startScenario(s)} disabled={!apiBase} style={scCard}>
-                <span style={{ fontSize: 26 }}>{s.emoji}</span>
-                <span style={{ fontSize: 14, fontWeight: 700 }}>{s.label}</span>
-                <span style={{ fontSize: 11, color: "#8b90a6" }}>{s.desc}</span>
-              </button>
-            ))}
-          </div>
-          {!apiBase && !urlErr && <p style={{ textAlign: "center", color: "#8b90a6", fontSize: 13, marginTop: 16 }}>서버 연결 중…</p>}
-        </section>
+          <div style={{ width: 34 }} />
+        </header>
+
+        <div style={{ padding: "16px 16px 30px", overflowY: "auto" }}>
+          <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 16px" }}>🔊로 듣고, 🎤로 따라 말하면 발음 점수가 나와요.</p>
+          {lesson.phrases.map((p, idx) => {
+            const sc = lessonScores[idx];
+            const recing = recActive === idx;
+            const busy = analyzing && recTargetRef.current?.idx === idx;
+            return (
+              <div key={idx} style={phraseCard}>
+                <div style={{ fontSize: 17, fontWeight: 700 }}>{p.en}</div>
+                <div style={{ fontSize: 13.5, color: "#a8adc4", marginTop: 3 }}>{p.ko}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+                  <button onClick={() => speak(p.en)} style={phraseBtn}>🔊 듣기</button>
+                  {HAS_REC && (
+                    <button onClick={recing ? endRec : () => beginRec({ idx, ref: p.en })}
+                      disabled={busy || (recActive !== null && !recing)}
+                      style={{ ...phraseBtn, ...(recing ? { background: "#e8503a", color: "#fff", borderColor: "#e8503a" } : {}) }}>
+                      {recing ? "■ 끝내기" : busy ? "분석 중…" : "🎤 따라 말하기"}
+                    </button>
+                  )}
+                  {sc && <span style={{ marginLeft: "auto", fontSize: 20, fontWeight: 800, color: scoreColor(sc.pron) }}>{sc.pron}</span>}
+                </div>
+                {sc && (
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ display: "flex", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+                      <Metric label="정확도" v={sc.accuracy} />
+                      <Metric label="유창성" v={sc.fluency} />
+                      {sc.completeness != null && <Metric label="완성도" v={sc.completeness} />}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                      {(sc.words || []).map((w, i) => (
+                        <span key={i} style={{ fontSize: 12.5, fontWeight: 600, padding: "2px 7px", borderRadius: 6, background: "#1c2136", color: scoreColor(w.accuracy ?? 100) }}>
+                          {w.word}{w.errorType && w.errorType !== "None" ? " ⚠️" : ""}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          <button onClick={startLessonRoleplay} disabled={!apiBase} style={roleplayBtn}>
+            🎭 배운 표현으로 롤플레이 하기
+          </button>
+        </div>
       </div>
     );
   }
@@ -291,13 +453,13 @@ export default function App() {
 
       <div style={inputBar}>
         {HAS_REC && (
-          <button onClick={recording ? stopRec : startRec} disabled={analyzing || loading}
-            style={{ ...micBtn, ...(recording ? micOn : {}) }} title="녹음해서 발음 평가">
-            {recording ? "■" : "🎤"}
+          <button onClick={recActive === "chat" ? endRec : () => beginRec(null)} disabled={analyzing || loading}
+            style={{ ...micBtn, ...(recActive === "chat" ? micOn : {}) }} title="녹음해서 발음 평가">
+            {recActive === "chat" ? "■" : "🎤"}
           </button>
         )}
         <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder={recording ? "녹음 중… ■ 눌러 끝내기" : "영어로 답하기 (또는 🎤 말하기)"} style={textInput} disabled={recording} />
+          placeholder={recActive === "chat" ? "녹음 중… ■ 눌러 끝내기" : "영어로 답하기 (또는 🎤 말하기)"} style={textInput} disabled={recActive === "chat"} />
         <button onClick={() => send()} disabled={loading || analyzing || !input.trim()} style={sendBtn}>↑</button>
       </div>
       <p style={sttNote}>
@@ -408,3 +570,9 @@ const micOn = { background: "#e8503a", borderColor: "#e8503a", color: "#fff" };
 const textInput = { flex: 1, background: "#171b2c", border: "1px solid #262a3d", borderRadius: 999, padding: "12px 16px", color: "#eef0f7", fontSize: 15, outline: "none" };
 const sendBtn = { width: 44, height: 44, flexShrink: 0, borderRadius: 999, border: "none", background: "#4c6ef5", color: "#fff", fontSize: 20, fontWeight: 800, cursor: "pointer" };
 const sttNote = { color: "#8b90a6", fontSize: 11.5, textAlign: "center", padding: "0 18px 12px", margin: 0 };
+const modeTab = { flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid #262a3d", background: "#171b2c", color: "#8b90a6", fontSize: 14, fontWeight: 700, cursor: "pointer" };
+const modeOn = { background: "#4c6ef5", color: "#fff", borderColor: "#4c6ef5" };
+const lessonItem = { display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", cursor: "pointer", textAlign: "left" };
+const phraseCard = { background: "#161a2b", border: "1px solid #262a3d", borderRadius: 14, padding: "14px 16px", marginBottom: 12 };
+const phraseBtn = { border: "1px solid #2f3550", background: "#1c2136", color: "#cdd2e6", fontSize: 13, fontWeight: 700, padding: "8px 12px", borderRadius: 10, cursor: "pointer" };
+const roleplayBtn = { width: "100%", marginTop: 8, padding: "15px 0", borderRadius: 14, border: "none", background: "#4c6ef5", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" };

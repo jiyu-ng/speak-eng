@@ -99,6 +99,25 @@ const LESSONS = [
 // 녹음 지원 여부 (마이크로 발음평가). HTTPS + MediaRecorder 필요.
 const HAS_REC = typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia && typeof window.MediaRecorder !== "undefined";
 
+// ── 로컬 저장: 스트릭 + 복습 노트 ───────────────────────────
+const STREAK_KEY = "speak_streak_v1";
+const REVIEW_KEY = "speak_review_v1";
+const dateStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const todayStr = () => dateStr(new Date());
+function loadStreak() { try { return JSON.parse(localStorage.getItem(STREAK_KEY)) || { last: "", count: 0 }; } catch { return { last: "", count: 0 }; } }
+function bumpStreak() {
+  const s = loadStreak();
+  const t = todayStr();
+  if (s.last === t) return s;
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const count = s.last === dateStr(y) ? (s.count || 0) + 1 : 1;
+  const ns = { last: t, count };
+  try { localStorage.setItem(STREAK_KEY, JSON.stringify(ns)); } catch {}
+  return ns;
+}
+function loadReview() { try { return JSON.parse(localStorage.getItem(REVIEW_KEY)) || []; } catch { return []; } }
+function persistReview(items) { try { localStorage.setItem(REVIEW_KEY, JSON.stringify(items.slice(0, 200))); } catch {} }
+
 const scoreColor = (n) => (n >= 80 ? "#63c187" : n >= 60 ? "#e0b64a" : "#e8724a");
 
 // ── 화면 잠금 (PIN) ── 화면 가림막용. 통과 시 그 기기에선 다음부터 자동.
@@ -121,6 +140,8 @@ export default function App() {
   const [lessonScores, setLessonScores] = useState({}); // {phraseIdx: pronResult}
   const [recActive, setRecActive] = useState(null); // null | "chat" | phraseIdx
   const recTargetRef = useRef(null); // null=chat, or {idx, ref}
+  const [streak, setStreak] = useState(() => loadStreak());
+  const [review, setReview] = useState(() => loadReview());
   const [unlocked, setUnlocked] = useState(() => {
     try { return localStorage.getItem(PIN_KEY) === "1"; } catch (e) { return false; }
   });
@@ -202,11 +223,12 @@ export default function App() {
   const send = async (text, pron = null) => {
     const t = (text ?? input).trim();
     if (!t || loading) return;
-    primeTTS();
+    primeTTS(); markStudied();
     const next = [...messages, { role: "user", text: t, pron }];
     setMessages(next); setInput(""); setLoading(true);
     try {
       const r = await fetchTurn(next, scenario);
+      addGrammar(t, r.correction);
       setMessages((prev) => {
         const copy = [...prev];
         for (let i = copy.length - 1; i >= 0; i--) {
@@ -263,6 +285,8 @@ export default function App() {
         alert(r.noMatch || !r.text ? "말이 잘 안 들렸어요. 다시 또박또박 말해볼까요? (타이핑도 OK)" : r.error);
         return;
       }
+      markStudied();
+      addPronMistakes(r.words, target?.ref || r.text);
       if (target === null) {
         send(r.text, { accuracy: r.accuracy, fluency: r.fluency, prosody: r.prosody, pron: r.pron, words: r.words || [] });
       } else {
@@ -273,6 +297,35 @@ export default function App() {
       alert("발음 분석에 실패했어요. 다시 시도해 주세요.");
     }
   };
+
+  const markStudied = useCallback(() => { setStreak(bumpStreak()); }, []);
+  const addPronMistakes = useCallback((words, sentence) => {
+    const bad = (words || []).filter((w) => (w.errorType && w.errorType !== "None") || (w.accuracy != null && w.accuracy < 60));
+    if (!bad.length) return;
+    setReview((prev) => {
+      const next = [...prev];
+      for (const w of bad) {
+        if (!w.word) continue;
+        const key = w.word.toLowerCase();
+        const item = { type: "pron", word: w.word, accuracy: w.accuracy ?? null, sentence: sentence || "", date: todayStr() };
+        const i = next.findIndex((r) => r.type === "pron" && r.word?.toLowerCase() === key);
+        if (i >= 0) next.splice(i, 1);
+        next.unshift(item);
+      }
+      persistReview(next);
+      return next;
+    });
+  }, []);
+  const addGrammar = useCallback((text, correction) => {
+    if (!correction) return;
+    setReview((prev) => {
+      const next = [{ type: "grammar", text, correction, date: todayStr() }, ...prev];
+      persistReview(next);
+      return next;
+    });
+  }, []);
+  const removeReview = (idx) => setReview((prev) => { const n = prev.filter((_, i) => i !== idx); persistReview(n); return n; });
+  const clearReview = () => { if (window.confirm("복습 노트를 전부 지울까요?")) { setReview([]); persistReview([]); } };
 
   const openLesson = (l) => { setLesson(l); setLessonScores({}); setView("lesson"); };
   const startLessonRoleplay = () => {
@@ -293,12 +346,16 @@ export default function App() {
           <div style={{ fontSize: 30 }}>🗣️</div>
           <h1 style={h1}>스픽메이트</h1>
           <p style={sub}>AI 파트너랑 영어로 대화하며 스피킹 연습</p>
+          {streak.count > 0 && (
+            <div style={streakBadge}>🔥 {streak.count}일째 공부 중{streak.last === todayStr() ? " · 오늘 완료!" : " · 오늘도 화이팅!"}</div>
+          )}
         </header>
         {urlErr && <div style={banner}>⚠️ 회화 서버 주소를 못 불러왔어요. 잠시 후 새로고침해 주세요.</div>}
 
-        <div style={{ display: "flex", gap: 8, padding: "0 18px", marginBottom: 20 }}>
-          <button onClick={() => setHomeMode("convo")} style={{ ...modeTab, ...(homeMode === "convo" ? modeOn : {}) }}>💬 상황별 대화</button>
+        <div style={{ display: "flex", gap: 6, padding: "0 18px", marginBottom: 20 }}>
+          <button onClick={() => setHomeMode("convo")} style={{ ...modeTab, ...(homeMode === "convo" ? modeOn : {}) }}>💬 대화</button>
           <button onClick={() => setHomeMode("lesson")} style={{ ...modeTab, ...(homeMode === "lesson" ? modeOn : {}) }}>📚 레슨</button>
+          <button onClick={() => setHomeMode("review")} style={{ ...modeTab, ...(homeMode === "review" ? modeOn : {}) }}>📒 복습{review.length ? ` ${review.length}` : ""}</button>
         </div>
 
         {homeMode === "convo" ? (
@@ -324,7 +381,7 @@ export default function App() {
               </div>
             </section>
           </>
-        ) : (
+        ) : homeMode === "lesson" ? (
           <section>
             <p style={sectionLabel}>주제 고르고 따라 말하기 연습해요</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "0 18px" }}>
@@ -340,6 +397,8 @@ export default function App() {
               ))}
             </div>
           </section>
+        ) : (
+          <ReviewList review={review} onSpeak={speak} onRemove={removeReview} onClear={clearReview} onGoConvo={() => setHomeMode("convo")} />
         )}
         {!apiBase && !urlErr && <p style={{ textAlign: "center", color: "#8b90a6", fontSize: 13, marginTop: 16 }}>서버 연결 중…</p>}
       </div>
@@ -506,6 +565,63 @@ function Metric({ label, v }) {
   );
 }
 
+// 복습 노트
+function ReviewList({ review, onSpeak, onRemove, onClear, onGoConvo }) {
+  if (!review.length) {
+    return (
+      <div style={{ textAlign: "center", padding: "30px 24px" }}>
+        <div style={{ fontSize: 34 }}>📒</div>
+        <p style={{ color: "#8b90a6", fontSize: 14, lineHeight: 1.6, margin: "12px 0 18px" }}>
+          아직 복습할 게 없어요.<br />대화나 레슨을 하면 발음이 어긋난 단어랑<br />문법 교정받은 표현이 여기 자동으로 모여요!
+        </p>
+        <button onClick={onGoConvo} style={{ ...roleplayBtn, width: "auto", padding: "12px 22px" }}>💬 대화 시작하기</button>
+      </div>
+    );
+  }
+  const prons = review.map((r, i) => ({ r, i })).filter((x) => x.r.type === "pron");
+  const grams = review.map((r, i) => ({ r, i })).filter((x) => x.r.type === "grammar");
+  return (
+    <section style={{ padding: "0 18px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <p style={{ color: "#8b90a6", fontSize: 12.5, fontWeight: 700, margin: 0 }}>모아둔 복습 {review.length}개</p>
+        <button onClick={onClear} style={{ background: "none", border: "none", color: "#8b90a6", fontSize: 12.5, cursor: "pointer" }}>전체 지우기</button>
+      </div>
+
+      {prons.length > 0 && (
+        <>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#cdd2e6", margin: "6px 0 8px" }}>🎤 발음 다시 볼 단어</p>
+          {prons.map(({ r, i }) => (
+            <div key={i} style={reviewCard}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 17, fontWeight: 800, color: scoreColor(r.accuracy ?? 60) }}>{r.word}</span>
+                {r.accuracy != null && <span style={{ fontSize: 12, color: "#8b90a6" }}>{r.accuracy}점</span>}
+                <button onClick={() => onSpeak(r.word)} style={{ ...phraseBtn, padding: "5px 10px" }}>🔊</button>
+                <button onClick={() => onRemove(i)} style={reviewDel}>×</button>
+              </div>
+              {r.sentence && <div style={{ fontSize: 12.5, color: "#8b90a6", marginTop: 5 }}>“{r.sentence}”</div>}
+            </div>
+          ))}
+        </>
+      )}
+
+      {grams.length > 0 && (
+        <>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#cdd2e6", margin: "16px 0 8px" }}>💡 다시 볼 표현·문법</p>
+          {grams.map(({ r, i }) => (
+            <div key={i} style={reviewCard}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 13.5, color: "#eef0f7" }}>“{r.text}”</span>
+                <button onClick={() => onRemove(i)} style={reviewDel}>×</button>
+              </div>
+              <div style={{ fontSize: 13, color: "#c7e7a8", marginTop: 6, lineHeight: 1.5 }}>💡 {r.correction}</div>
+            </div>
+          ))}
+        </>
+      )}
+    </section>
+  );
+}
+
 // 화면 잠금 PIN 입력
 function PinGate({ onOk }) {
   const [pin, setPin] = useState("");
@@ -576,3 +692,6 @@ const lessonItem = { display: "flex", alignItems: "center", gap: 12, padding: "1
 const phraseCard = { background: "#161a2b", border: "1px solid #262a3d", borderRadius: 14, padding: "14px 16px", marginBottom: 12 };
 const phraseBtn = { border: "1px solid #2f3550", background: "#1c2136", color: "#cdd2e6", fontSize: 13, fontWeight: 700, padding: "8px 12px", borderRadius: 10, cursor: "pointer" };
 const roleplayBtn = { width: "100%", marginTop: 8, padding: "15px 0", borderRadius: 14, border: "none", background: "#4c6ef5", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" };
+const streakBadge = { display: "inline-block", marginTop: 12, background: "#2a1f14", color: "#f0a860", border: "1px solid #4a3418", borderRadius: 999, padding: "6px 16px", fontSize: 13, fontWeight: 700 };
+const reviewCard = { background: "#161a2b", border: "1px solid #262a3d", borderRadius: 12, padding: "12px 14px", marginBottom: 9 };
+const reviewDel = { background: "none", border: "none", color: "#6b7089", fontSize: 18, cursor: "pointer", lineHeight: 1, padding: "0 2px" };

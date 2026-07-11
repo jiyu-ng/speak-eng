@@ -36,63 +36,98 @@ const LEVELS = [
   { key: "advanced", label: "고급" },
 ];
 
-// ── 레슨 (일상 표현, 원본) ──────────────────────────────────
+// ── 레슨 (일상 표현·패턴, 원본) ─────────────────────────────
+// cat: "상황" = 상황별 회화 / "패턴" = 문장 패턴. phrase.note = 사용 팁/뉘앙스.
+const LESSON_CATS = ["상황", "패턴"];
 const LESSONS = [
-  { id: "cafe", emoji: "☕", title: "카페 필수표현", desc: "음료 주문할 때", roleplay: "카페에서 커피 주문하기", phrases: [
-    { en: "I'd like a latte, please.", ko: "라떼 하나 주세요." },
-    { en: "For here or to go?", ko: "여기서 드세요, 가져가세요?" },
-    { en: "Can I get it iced?", ko: "아이스로 주시겠어요?" },
-    { en: "How much is it?", ko: "얼마예요?" },
-    { en: "Keep the change.", ko: "잔돈은 괜찮아요." },
+  // ── 상황별 ──
+  { id: "cafe", cat: "상황", emoji: "☕", title: "카페 필수표현", desc: "음료 주문할 때", roleplay: "카페에서 커피 주문하기", phrases: [
+    { en: "I'd like a latte, please.", ko: "라떼 하나 주세요.", note: "'I want'보다 정중한 주문 표현이에요." },
+    { en: "For here or to go?", ko: "여기서 드세요, 가져가세요?", note: "점원이 자주 묻는 말 — 미리 알아두면 안 당황해요." },
+    { en: "Can I get it iced?", ko: "아이스로 해주시겠어요?", note: "'Can I get ~'은 캐주얼한 주문에 만능이에요." },
+    { en: "How much is it?", ko: "얼마예요?", note: "가격 물을 때 기본 표현." },
+    { en: "Keep the change.", ko: "잔돈은 괜찮아요.", note: "팁 문화권에서 자주 써요." },
   ] },
-  { id: "intro", emoji: "👋", title: "자기소개", desc: "처음 만났을 때", roleplay: "처음 만난 사람과 자기소개하기", phrases: [
-    { en: "Nice to meet you.", ko: "만나서 반가워요." },
-    { en: "I'm from Korea.", ko: "저는 한국에서 왔어요." },
-    { en: "What do you do?", ko: "무슨 일 하세요?" },
-    { en: "How long have you been here?", ko: "여기 온 지 얼마나 됐어요?" },
-    { en: "Let's keep in touch.", ko: "앞으로 연락해요." },
+  { id: "intro", cat: "상황", emoji: "👋", title: "자기소개", desc: "처음 만났을 때", roleplay: "처음 만난 사람과 자기소개하기", phrases: [
+    { en: "Nice to meet you.", ko: "만나서 반가워요.", note: "첫 만남 인사의 정석." },
+    { en: "I'm from Korea.", ko: "저는 한국에서 왔어요.", note: "'I come from'도 되지만 'I'm from'이 더 자연스러워요." },
+    { en: "What do you do?", ko: "무슨 일 하세요?", note: "직업 물을 때 — 'What's your job?'보다 이게 자연스러워요." },
+    { en: "How long have you been here?", ko: "여기 온 지 얼마나 됐어요?", note: "현재완료로 '얼마나 됐는지' 묻는 패턴." },
+    { en: "Let's keep in touch.", ko: "앞으로 연락해요.", note: "헤어질 때 관계 이어가자는 표현." },
   ] },
-  { id: "restaurant", emoji: "🍽️", title: "식당에서", desc: "음식 주문·계산", roleplay: "식당에서 주문하고 계산하기", phrases: [
-    { en: "A table for two, please.", ko: "두 명 자리 부탁해요." },
-    { en: "Could I see the menu?", ko: "메뉴 좀 볼 수 있을까요?" },
-    { en: "What do you recommend?", ko: "뭐가 맛있어요?" },
-    { en: "I'll have this one.", ko: "이걸로 할게요." },
-    { en: "Could we get the check?", ko: "계산서 주시겠어요?" },
+  { id: "restaurant", cat: "상황", emoji: "🍽️", title: "식당에서", desc: "음식 주문·계산", roleplay: "식당에서 주문하고 계산하기", phrases: [
+    { en: "A table for two, please.", ko: "두 명 자리 부탁해요.", note: "인원수 + for + 숫자로 자리 요청." },
+    { en: "Could I see the menu?", ko: "메뉴 좀 볼 수 있을까요?", note: "'Could I ~'는 아주 공손한 요청." },
+    { en: "What do you recommend?", ko: "뭐가 맛있어요?", note: "추천 물을 때 원어민이 실제로 쓰는 표현." },
+    { en: "I'll have this one.", ko: "이걸로 할게요.", note: "주문 확정 — 'I'll have ~'가 자연스러워요." },
+    { en: "Could we get the check?", ko: "계산서 주시겠어요?", note: "미국은 check, 영국은 bill." },
   ] },
-  { id: "directions", emoji: "🗺️", title: "길 묻기", desc: "길 물어볼 때", roleplay: "길을 잃고 길 물어보기", phrases: [
-    { en: "How do I get to the station?", ko: "역에 어떻게 가나요?" },
-    { en: "Is it far from here?", ko: "여기서 먼가요?" },
-    { en: "Turn left at the corner.", ko: "모퉁이에서 왼쪽으로 도세요." },
-    { en: "How long does it take?", ko: "얼마나 걸려요?" },
-    { en: "Thank you for your help.", ko: "도와주셔서 감사해요." },
+  { id: "directions", cat: "상황", emoji: "🗺️", title: "길 묻기", desc: "길 물어볼 때", roleplay: "길을 잃고 길 물어보기", phrases: [
+    { en: "How do I get to the station?", ko: "역에 어떻게 가나요?", note: "'How do I get to + 장소'가 길 묻기 핵심." },
+    { en: "Is it far from here?", ko: "여기서 먼가요?", note: "거리 확인할 때." },
+    { en: "Turn left at the corner.", ko: "모퉁이에서 왼쪽으로 도세요.", note: "길 안내 들을 때 자주 나오는 말." },
+    { en: "How long does it take?", ko: "얼마나 걸려요?", note: "소요 시간 물을 때 — 'take'가 '걸리다'." },
+    { en: "Thank you for your help.", ko: "도와주셔서 감사해요.", note: "도움받은 뒤 마무리 인사." },
   ] },
-  { id: "smalltalk", emoji: "💬", title: "스몰토크", desc: "가벼운 대화", roleplay: "가벼운 스몰토크 나누기", phrases: [
-    { en: "How's your day going?", ko: "오늘 하루 어때요?" },
-    { en: "Any plans for the weekend?", ko: "주말에 계획 있어요?" },
-    { en: "The weather's lovely today.", ko: "오늘 날씨 좋네요." },
-    { en: "It was nice talking to you.", ko: "얘기 즐거웠어요." },
-    { en: "Let's catch up soon.", ko: "조만간 또 봐요." },
+  { id: "smalltalk", cat: "상황", emoji: "💬", title: "스몰토크", desc: "가벼운 대화", roleplay: "가벼운 스몰토크 나누기", phrases: [
+    { en: "How's your day going?", ko: "오늘 하루 어때요?", note: "'How are you?'보다 살아있는 안부 표현." },
+    { en: "Any plans for the weekend?", ko: "주말에 계획 있어요?", note: "가볍게 대화 트는 스몰토크 단골." },
+    { en: "The weather's lovely today.", ko: "오늘 날씨 좋네요.", note: "날씨는 만국 공통 스몰토크 소재." },
+    { en: "It was nice talking to you.", ko: "얘기 즐거웠어요.", note: "대화 마무리할 때." },
+    { en: "Let's catch up soon.", ko: "조만간 또 봐요.", note: "'catch up' = 밀린 얘기 나누다." },
   ] },
-  { id: "airport", emoji: "✈️", title: "공항·여행", desc: "공항에서", roleplay: "공항에서 체크인하고 이동하기", phrases: [
-    { en: "I'd like to check in, please.", ko: "체크인 하려고요." },
-    { en: "Here's my passport.", ko: "여기 여권이요." },
-    { en: "Where's the boarding gate?", ko: "탑승구가 어디예요?" },
-    { en: "I have nothing to declare.", ko: "신고할 것 없어요." },
-    { en: "Where can I find a taxi?", ko: "택시는 어디서 타요?" },
+  { id: "airport", cat: "상황", emoji: "✈️", title: "공항·여행", desc: "공항에서", roleplay: "공항에서 체크인하고 이동하기", phrases: [
+    { en: "I'd like to check in, please.", ko: "체크인 하려고요.", note: "카운터에서 첫 마디." },
+    { en: "Here's my passport.", ko: "여기 여권이요.", note: "'Here's ~' = 여기 있어요(건네줄 때)." },
+    { en: "Where's the boarding gate?", ko: "탑승구가 어디예요?", note: "탑승구 찾을 때." },
+    { en: "I have nothing to declare.", ko: "신고할 것 없어요.", note: "세관에서 쓰는 고정 표현." },
+    { en: "Where can I find a taxi?", ko: "택시는 어디서 타요?", note: "'Where can I find ~'로 위치 묻기." },
   ] },
-  { id: "shopping", emoji: "🛍️", title: "쇼핑", desc: "물건 살 때", roleplay: "가게에서 옷 사기", phrases: [
-    { en: "Can I try this on?", ko: "이거 입어봐도 돼요?" },
-    { en: "Do you have a smaller size?", ko: "더 작은 사이즈 있어요?" },
-    { en: "How much is this?", ko: "이거 얼마예요?" },
-    { en: "Do you take cards?", ko: "카드 되나요?" },
-    { en: "I'll take it.", ko: "이걸로 살게요." },
+  { id: "shopping", cat: "상황", emoji: "🛍️", title: "쇼핑", desc: "물건 살 때", roleplay: "가게에서 옷 사기", phrases: [
+    { en: "Can I try this on?", ko: "이거 입어봐도 돼요?", note: "'try on' = 입어보다(옷·신발)." },
+    { en: "Do you have a smaller size?", ko: "더 작은 사이즈 있어요?", note: "비교급 + size로 사이즈 요청." },
+    { en: "How much is this?", ko: "이거 얼마예요?", note: "가격 물을 때." },
+    { en: "Do you take cards?", ko: "카드 되나요?", note: "'take cards' = 카드 받다." },
+    { en: "I'll take it.", ko: "이걸로 살게요.", note: "구매 확정 — 아주 자주 써요." },
   ] },
-  { id: "phone", emoji: "📞", title: "전화 표현", desc: "전화 통화", roleplay: "예약 전화 걸어서 대화하기", phrases: [
-    { en: "Hello, this is Jiyoo.", ko: "여보세요, 저 지유예요." },
-    { en: "Could I speak to the manager?", ko: "매니저와 통화할 수 있을까요?" },
-    { en: "Can I leave a message?", ko: "메시지 남길 수 있을까요?" },
-    { en: "Could you repeat that?", ko: "다시 말씀해 주시겠어요?" },
-    { en: "Thanks for your help.", ko: "도와주셔서 감사해요." },
+  { id: "phone", cat: "상황", emoji: "📞", title: "전화 표현", desc: "전화 통화", roleplay: "예약 전화 걸어서 대화하기", phrases: [
+    { en: "Hello, this is Jiyoo.", ko: "여보세요, 저 지유예요.", note: "전화에선 'I am' 아니고 'this is'." },
+    { en: "Could I speak to the manager?", ko: "매니저와 통화할 수 있을까요?", note: "'speak to + 사람'으로 연결 요청." },
+    { en: "Can I leave a message?", ko: "메시지 남길 수 있을까요?", note: "부재중일 때." },
+    { en: "Could you repeat that?", ko: "다시 말씀해 주시겠어요?", note: "못 알아들었을 때 정중하게." },
+    { en: "Thanks for your help.", ko: "도와주셔서 감사해요.", note: "통화 마무리." },
+  ] },
+
+  // ── 패턴 표현 ──
+  { id: "p-want", cat: "패턴", emoji: "🔑", title: "~하고 싶어요", desc: "I'd like to ___", roleplay: "'I'd like to' 표현으로 원하는 것 요청하기", phrases: [
+    { en: "I'd like to check in.", ko: "체크인 하고 싶어요.", note: "'I'd like to + 동사' = 정중하게 원하는 것 말하기." },
+    { en: "I'd like to make a reservation.", ko: "예약하고 싶어요.", note: "식당·호텔 예약할 때." },
+    { en: "I'd like to order now.", ko: "지금 주문할게요.", note: "'I want'보다 부드럽고 정중해요." },
+    { en: "I'd like to pay by card.", ko: "카드로 계산할게요.", note: "'pay by + 수단'." },
+  ] },
+  { id: "p-can", cat: "패턴", emoji: "🔑", title: "~해도 될까요?", desc: "Can I / Could I ___?", roleplay: "'Can I / Could I' 표현으로 허락·요청하기", phrases: [
+    { en: "Can I try this on?", ko: "입어봐도 될까요?", note: "'Can I + 동사' = 해도 되는지 허락 구하기." },
+    { en: "Could I get some water?", ko: "물 좀 주시겠어요?", note: "'Could I'가 'Can I'보다 더 공손." },
+    { en: "Can I sit here?", ko: "여기 앉아도 될까요?", note: "빈자리 확인할 때." },
+    { en: "Could I ask you something?", ko: "뭐 좀 물어봐도 될까요?", note: "질문 꺼내기 전 쿠션 표현." },
+  ] },
+  { id: "p-couldyou", cat: "패턴", emoji: "🔑", title: "~해 주시겠어요?", desc: "Could you ___?", roleplay: "'Could you' 표현으로 부탁하기", phrases: [
+    { en: "Could you help me?", ko: "도와주시겠어요?", note: "'Could you + 동사' = 상대에게 정중히 부탁." },
+    { en: "Could you say that again?", ko: "다시 말씀해 주시겠어요?", note: "못 들었을 때." },
+    { en: "Could you speak slowly?", ko: "천천히 말씀해 주시겠어요?", note: "속도 부탁할 때." },
+    { en: "Could you recommend something?", ko: "추천해 주시겠어요?", note: "추천 부탁할 때." },
+  ] },
+  { id: "p-howabout", cat: "패턴", emoji: "🔑", title: "~하는 게 어때요?", desc: "How about / Why don't we ___?", roleplay: "'How about' 표현으로 제안하기", phrases: [
+    { en: "How about grabbing lunch?", ko: "점심 먹는 거 어때요?", note: "'How about + 동사ing' = 가볍게 제안." },
+    { en: "How about meeting at six?", ko: "6시에 만나는 거 어때요?", note: "약속 시간 제안." },
+    { en: "Why don't we take a break?", ko: "좀 쉬는 게 어때요?", note: "'Why don't we + 동사' = ~하자는 제안." },
+    { en: "Why don't we split the bill?", ko: "각자 계산하는 거 어때요?", note: "'split the bill' = 더치페이." },
+  ] },
+  { id: "p-think", cat: "패턴", emoji: "🔑", title: "~인 것 같아요", desc: "I think / It seems ___", roleplay: "'I think' 표현으로 의견 말하기", phrases: [
+    { en: "I think it's a great idea.", ko: "좋은 생각인 것 같아요.", note: "'I think (that) + 문장' = 의견 부드럽게." },
+    { en: "It seems a bit expensive.", ko: "좀 비싼 것 같아요.", note: "'It seems + 형용사' = ~해 보이다." },
+    { en: "I think I'm lost.", ko: "길을 잃은 것 같아요.", note: "확신 없이 말할 때 쿠션." },
+    { en: "I don't think that's right.", ko: "그건 아닌 것 같아요.", note: "부정은 'I don't think'가 자연스러워요." },
   ] },
 ];
 
@@ -120,6 +155,20 @@ function persistReview(items) { try { localStorage.setItem(REVIEW_KEY, JSON.stri
 
 const scoreColor = (n) => (n >= 80 ? "#63c187" : n >= 60 ? "#e0b64a" : "#e8724a");
 
+const shuffle = (a) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
+// 레슨 문장들로 빈칸 채우기 퀴즈 생성 (각 문장에서 가장 긴 단어를 빈칸으로)
+function quizFor(lesson) {
+  const keyOf = (en) => en.replace(/[.,!?"]/g, "").split(" ").reduce((a, b) => (b.length > a.length ? b : a), "");
+  const keys = lesson.phrases.map((p) => keyOf(p.en));
+  return lesson.phrases.map((p, idx) => {
+    const key = keys[idx];
+    const prompt = p.en.replace(new RegExp(`\\b${key}\\b`), "____");
+    const pool = [...new Set(keys.filter((w, i) => i !== idx && w.toLowerCase() !== key.toLowerCase()))];
+    const options = shuffle([key, ...shuffle(pool).slice(0, 2)]);
+    return { idx, prompt, ko: p.ko, answer: key, options };
+  });
+}
+
 // ── 화면 잠금 (PIN) ── 화면 가림막용. 통과 시 그 기기에선 다음부터 자동.
 const PIN = "0211";
 const PIN_KEY = "speak_unlocked_v1";
@@ -135,9 +184,12 @@ export default function App() {
   const [input, setInput] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [showKo, setShowKo] = useState({});
-  const [homeMode, setHomeMode] = useState("convo"); // convo | lesson
+  const [homeMode, setHomeMode] = useState("convo"); // convo | lesson | review
+  const [lessonCat, setLessonCat] = useState("상황"); // 상황 | 패턴
   const [lesson, setLesson] = useState(null);
+  const [lessonStage, setLessonStage] = useState("learn"); // learn | speak | quiz | roleplay
   const [lessonScores, setLessonScores] = useState({}); // {phraseIdx: pronResult}
+  const [quizState, setQuizState] = useState({}); // {phraseIdx: {picked, correct}}
   const [recActive, setRecActive] = useState(null); // null | "chat" | phraseIdx
   const recTargetRef = useRef(null); // null=chat, or {idx, ref}
   const [streak, setStreak] = useState(() => loadStreak());
@@ -327,7 +379,10 @@ export default function App() {
   const removeReview = (idx) => setReview((prev) => { const n = prev.filter((_, i) => i !== idx); persistReview(n); return n; });
   const clearReview = () => { if (window.confirm("복습 노트를 전부 지울까요?")) { setReview([]); persistReview([]); } };
 
-  const openLesson = (l) => { setLesson(l); setLessonScores({}); setView("lesson"); };
+  const openLesson = (l) => { setLesson(l); setLessonScores({}); setQuizState({}); setLessonStage("learn"); setView("lesson"); };
+  const pickQuiz = (idx, choice, answer) => {
+    setQuizState((s) => (s[idx]?.correct ? s : { ...s, [idx]: { picked: choice, correct: choice === answer } }));
+  };
   const startLessonRoleplay = () => {
     if (!lesson) return;
     startScenario({ key: "lesson-" + lesson.id, emoji: lesson.emoji, label: lesson.title + " 롤플레이", desc: lesson.roleplay });
@@ -383,9 +438,16 @@ export default function App() {
           </>
         ) : homeMode === "lesson" ? (
           <section>
-            <p style={sectionLabel}>주제 고르고 따라 말하기 연습해요</p>
+            <div style={{ display: "flex", gap: 6, padding: "0 18px", marginBottom: 14 }}>
+              {LESSON_CATS.map((c) => (
+                <button key={c} onClick={() => setLessonCat(c)} style={{ ...catChip, ...(lessonCat === c ? catChipOn : {}) }}>
+                  {c === "상황" ? "🗣️ 상황별" : "🔑 패턴 표현"}
+                </button>
+              ))}
+            </div>
+            <p style={sectionLabel}>{lessonCat === "상황" ? "상황별 핵심 표현을 배우고 연습해요" : "자주 쓰는 문장 패턴을 익혀요"}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "0 18px" }}>
-              {LESSONS.map((l) => (
+              {LESSONS.filter((l) => l.cat === lessonCat).map((l) => (
                 <button key={l.id} onClick={() => openLesson(l)} disabled={!apiBase} style={lessonItem}>
                   <span style={{ fontSize: 24 }}>{l.emoji}</span>
                   <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", flex: 1 }}>
@@ -405,63 +467,143 @@ export default function App() {
     );
   }
 
-  // ── 렌더: 레슨 연습 ──
+  // ── 렌더: 레슨 연습 (4단계) ──
   if (view === "lesson" && lesson) {
+    const STAGES = [
+      { key: "learn", label: "📖 배우기" },
+      { key: "speak", label: "🎤 말하기" },
+      { key: "quiz", label: "🧩 퀴즈" },
+      { key: "roleplay", label: "🎭 롤플레이" },
+    ];
+    const quiz = quizFor(lesson);
+    const quizDone = quiz.every((q) => quizState[q.idx]?.correct);
     return (
       <div style={wrap}>
         <header style={chatHead}>
           <button onClick={() => { window.speechSynthesis?.cancel(); setView("home"); }} style={backBtn}>←</button>
           <div style={{ textAlign: "center", flex: 1 }}>
             <div style={{ fontWeight: 800 }}>{lesson.emoji} {lesson.title}</div>
-            <div style={{ fontSize: 11, color: "#8b90a6" }}>따라 말하기 연습 · 스픽메이트</div>
+            <div style={{ fontSize: 11, color: "#8b90a6" }}>{lesson.cat === "패턴" ? lesson.desc : "핵심표현 배우기"} · 스픽메이트</div>
           </div>
           <div style={{ width: 34 }} />
         </header>
 
-        <div style={{ padding: "16px 16px 30px", overflowY: "auto" }}>
-          <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 16px" }}>🔊로 듣고, 🎤로 따라 말하면 발음 점수가 나와요.</p>
-          {lesson.phrases.map((p, idx) => {
-            const sc = lessonScores[idx];
-            const recing = recActive === idx;
-            const busy = analyzing && recTargetRef.current?.idx === idx;
-            return (
-              <div key={idx} style={phraseCard}>
-                <div style={{ fontSize: 17, fontWeight: 700 }}>{p.en}</div>
-                <div style={{ fontSize: 13.5, color: "#a8adc4", marginTop: 3 }}>{p.ko}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
-                  <button onClick={() => speak(p.en)} style={phraseBtn}>🔊 듣기</button>
-                  {HAS_REC && (
-                    <button onClick={recing ? endRec : () => beginRec({ idx, ref: p.en })}
-                      disabled={busy || (recActive !== null && !recing)}
-                      style={{ ...phraseBtn, ...(recing ? { background: "#e8503a", color: "#fff", borderColor: "#e8503a" } : {}) }}>
-                      {recing ? "■ 끝내기" : busy ? "분석 중…" : "🎤 따라 말하기"}
-                    </button>
-                  )}
-                  {sc && <span style={{ marginLeft: "auto", fontSize: 20, fontWeight: 800, color: scoreColor(sc.pron) }}>{sc.pron}</span>}
-                </div>
-                {sc && (
-                  <div style={{ marginTop: 8 }}>
-                    <div style={{ display: "flex", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
-                      <Metric label="정확도" v={sc.accuracy} />
-                      <Metric label="유창성" v={sc.fluency} />
-                      {sc.completeness != null && <Metric label="완성도" v={sc.completeness} />}
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                      {(sc.words || []).map((w, i) => (
-                        <span key={i} style={{ fontSize: 12.5, fontWeight: 600, padding: "2px 7px", borderRadius: 6, background: "#1c2136", color: scoreColor(w.accuracy ?? 100) }}>
-                          {w.word}{w.errorType && w.errorType !== "None" ? " ⚠️" : ""}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <div style={{ display: "flex", gap: 5, padding: "12px 12px 0", overflowX: "auto" }}>
+          {STAGES.map((s) => (
+            <button key={s.key} onClick={() => setLessonStage(s.key)} style={{ ...stageTab, ...(lessonStage === s.key ? stageTabOn : {}) }}>{s.label}</button>
+          ))}
+        </div>
 
-          <button onClick={startLessonRoleplay} disabled={!apiBase} style={roleplayBtn}>
-            🎭 배운 표현으로 롤플레이 하기
-          </button>
+        <div style={{ padding: "16px 16px 40px", overflowY: "auto" }}>
+          {lessonStage === "learn" && (
+            <>
+              <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 14px" }}>표현을 눈으로 익히고 🔊로 들어봐요. 다 보면 🎤 말하기로!</p>
+              {lesson.phrases.map((p, idx) => (
+                <div key={idx} style={phraseCard}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                    <div style={{ fontSize: 17, fontWeight: 700 }}>{p.en}</div>
+                    <button onClick={() => speak(p.en)} style={{ ...phraseBtn, padding: "5px 10px", flexShrink: 0 }}>🔊</button>
+                  </div>
+                  <div style={{ fontSize: 13.5, color: "#a8adc4", marginTop: 3 }}>{p.ko}</div>
+                  {p.note && <div style={noteBox}>💡 {p.note}</div>}
+                </div>
+              ))}
+              <button onClick={() => setLessonStage("speak")} style={roleplayBtn}>🎤 따라 말하기 연습 →</button>
+            </>
+          )}
+
+          {lessonStage === "speak" && (
+            <>
+              <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 14px" }}>🎤로 따라 말하면 발음 점수가 나와요.</p>
+              {lesson.phrases.map((p, idx) => {
+                const sc = lessonScores[idx];
+                const recing = recActive === idx;
+                const busy = analyzing && recTargetRef.current?.idx === idx;
+                return (
+                  <div key={idx} style={phraseCard}>
+                    <div style={{ fontSize: 16.5, fontWeight: 700 }}>{p.en}</div>
+                    <div style={{ fontSize: 13, color: "#a8adc4", marginTop: 3 }}>{p.ko}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+                      <button onClick={() => speak(p.en)} style={phraseBtn}>🔊 듣기</button>
+                      {HAS_REC && (
+                        <button onClick={recing ? endRec : () => beginRec({ idx, ref: p.en })}
+                          disabled={busy || (recActive !== null && !recing)}
+                          style={{ ...phraseBtn, ...(recing ? { background: "#e8503a", color: "#fff", borderColor: "#e8503a" } : {}) }}>
+                          {recing ? "■ 끝내기" : busy ? "분석 중…" : "🎤 따라 말하기"}
+                        </button>
+                      )}
+                      {sc && <span style={{ marginLeft: "auto", fontSize: 20, fontWeight: 800, color: scoreColor(sc.pron) }}>{sc.pron}</span>}
+                    </div>
+                    {sc && (
+                      <div style={{ marginTop: 8 }}>
+                        <div style={{ display: "flex", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+                          <Metric label="정확도" v={sc.accuracy} />
+                          <Metric label="유창성" v={sc.fluency} />
+                          {sc.completeness != null && <Metric label="완성도" v={sc.completeness} />}
+                        </div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                          {(sc.words || []).map((w, i) => (
+                            <span key={i} style={{ fontSize: 12.5, fontWeight: 600, padding: "2px 7px", borderRadius: 6, background: "#1c2136", color: scoreColor(w.accuracy ?? 100) }}>
+                              {w.word}{w.errorType && w.errorType !== "None" ? " ⚠️" : ""}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              <button onClick={() => setLessonStage("quiz")} style={roleplayBtn}>🧩 퀴즈로 확인하기 →</button>
+            </>
+          )}
+
+          {lessonStage === "quiz" && (
+            <>
+              <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 14px" }}>빈칸에 알맞은 단어를 골라요. 뜻을 보고 맞춰봐요!</p>
+              {quiz.map((q) => {
+                const st = quizState[q.idx];
+                return (
+                  <div key={q.idx} style={phraseCard}>
+                    <div style={{ fontSize: 13, color: "#a8adc4", marginBottom: 4 }}>{q.ko}</div>
+                    <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{q.prompt}</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {q.options.map((opt) => {
+                        const chosen = st?.picked === opt;
+                        const isAns = opt === q.answer;
+                        let bg = "#1c2136", col = "#cdd2e6", bd = "#2f3550";
+                        if (st) {
+                          if (isAns && (st.correct || chosen)) { bg = "#1e3324"; col = "#8fe0a8"; bd = "#2f5a3a"; }
+                          else if (chosen && !st.correct) { bg = "#33201f"; col = "#f0a0a0"; bd = "#5a2f2f"; }
+                        }
+                        return (
+                          <button key={opt} onClick={() => pickQuiz(q.idx, opt, q.answer)} disabled={st?.correct}
+                            style={{ border: `1px solid ${bd}`, background: bg, color: col, fontSize: 14, fontWeight: 700, padding: "9px 14px", borderRadius: 10, cursor: "pointer" }}>
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {st && (st.correct ? <div style={{ color: "#8fe0a8", fontSize: 12.5, marginTop: 8 }}>✅ 정답! “{lesson.phrases[q.idx].en}”</div>
+                      : <div style={{ color: "#f0a0a0", fontSize: 12.5, marginTop: 8 }}>다시 골라봐요!</div>)}
+                  </div>
+                );
+              })}
+              <button onClick={() => setLessonStage("roleplay")} style={{ ...roleplayBtn, opacity: quizDone ? 1 : 0.6 }}>
+                {quizDone ? "🎭 롤플레이로 써먹기 →" : "🎭 롤플레이로 넘어가기 (퀴즈 다 풀면 좋아요)"}
+              </button>
+            </>
+          )}
+
+          {lessonStage === "roleplay" && (
+            <div style={{ textAlign: "center", padding: "20px 10px" }}>
+              <div style={{ fontSize: 40 }}>🎭</div>
+              <p style={{ fontSize: 15, fontWeight: 700, margin: "12px 0 6px" }}>배운 표현으로 실전 대화!</p>
+              <p style={{ color: "#8b90a6", fontSize: 13.5, lineHeight: 1.6, margin: "0 0 22px" }}>
+                AI 파트너와 <b style={{ color: "#cdd2e6" }}>{lesson.roleplay}</b>.<br />방금 배운 표현을 직접 써보세요!
+              </p>
+              <button onClick={startLessonRoleplay} disabled={!apiBase} style={{ ...roleplayBtn, width: "auto", padding: "14px 28px" }}>🎭 롤플레이 시작하기</button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -695,3 +837,8 @@ const roleplayBtn = { width: "100%", marginTop: 8, padding: "15px 0", borderRadi
 const streakBadge = { display: "inline-block", marginTop: 12, background: "#2a1f14", color: "#f0a860", border: "1px solid #4a3418", borderRadius: 999, padding: "6px 16px", fontSize: 13, fontWeight: 700 };
 const reviewCard = { background: "#161a2b", border: "1px solid #262a3d", borderRadius: 12, padding: "12px 14px", marginBottom: 9 };
 const reviewDel = { background: "none", border: "none", color: "#6b7089", fontSize: 18, cursor: "pointer", lineHeight: 1, padding: "0 2px" };
+const catChip = { flex: 1, padding: "9px 0", borderRadius: 10, border: "1px solid #262a3d", background: "#171b2c", color: "#8b90a6", fontSize: 13, fontWeight: 700, cursor: "pointer" };
+const catChipOn = { background: "#2a3358", color: "#cdd7ff", borderColor: "#4c6ef5" };
+const stageTab = { flexShrink: 0, padding: "8px 12px", borderRadius: 10, border: "1px solid #262a3d", background: "#171b2c", color: "#8b90a6", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" };
+const stageTabOn = { background: "#4c6ef5", color: "#fff", borderColor: "#4c6ef5" };
+const noteBox = { marginTop: 8, background: "#161d18", border: "1px solid #2a3a2c", borderRadius: 10, padding: "8px 11px", fontSize: 12.5, color: "#a8cbb0", lineHeight: 1.5 };

@@ -152,6 +152,9 @@ function bumpStreak() {
 }
 function loadReview() { try { return JSON.parse(localStorage.getItem(REVIEW_KEY)) || []; } catch { return []; } }
 function persistReview(items) { try { localStorage.setItem(REVIEW_KEY, JSON.stringify(items.slice(0, 200))); } catch {} }
+const BOOKMARK_KEY = "speak_bookmarks_v1";
+function loadBookmarks() { try { return JSON.parse(localStorage.getItem(BOOKMARK_KEY)) || []; } catch { return []; } }
+function persistBookmarks(items) { try { localStorage.setItem(BOOKMARK_KEY, JSON.stringify(items.slice(0, 300))); } catch {} }
 
 const scoreColor = (n) => (n >= 80 ? "#63c187" : n >= 60 ? "#e0b64a" : "#e8724a");
 
@@ -194,6 +197,7 @@ export default function App() {
   const recTargetRef = useRef(null); // null=chat, or {idx, ref}
   const [streak, setStreak] = useState(() => loadStreak());
   const [review, setReview] = useState(() => loadReview());
+  const [bookmarks, setBookmarks] = useState(() => loadBookmarks());
   const [unlocked, setUnlocked] = useState(() => {
     try { return localStorage.getItem(PIN_KEY) === "1"; } catch (e) { return false; }
   });
@@ -379,6 +383,17 @@ export default function App() {
   const removeReview = (idx) => setReview((prev) => { const n = prev.filter((_, i) => i !== idx); persistReview(n); return n; });
   const clearReview = () => { if (window.confirm("복습 노트를 전부 지울까요?")) { setReview([]); persistReview([]); } };
 
+  const isBookmarked = useCallback((en) => bookmarks.some((b) => b.en === en), [bookmarks]);
+  const toggleBookmark = useCallback((en, ko = "") => {
+    setBookmarks((prev) => {
+      const exists = prev.some((b) => b.en === en);
+      const next = exists ? prev.filter((b) => b.en !== en) : [{ en, ko, date: todayStr() }, ...prev];
+      persistBookmarks(next);
+      return next;
+    });
+  }, []);
+  const removeBookmark = (en) => setBookmarks((prev) => { const n = prev.filter((b) => b.en !== en); persistBookmarks(n); return n; });
+
   const openLesson = (l) => { setLesson(l); setLessonScores({}); setQuizState({}); setLessonStage("learn"); setView("lesson"); };
   const pickQuiz = (idx, choice, answer) => {
     setQuizState((s) => (s[idx]?.correct ? s : { ...s, [idx]: { picked: choice, correct: choice === answer } }));
@@ -407,10 +422,11 @@ export default function App() {
         </header>
         {urlErr && <div style={banner}>⚠️ 회화 서버 주소를 못 불러왔어요. 잠시 후 새로고침해 주세요.</div>}
 
-        <div style={{ display: "flex", gap: 6, padding: "0 18px", marginBottom: 20 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "0 18px", marginBottom: 20 }}>
           <button onClick={() => setHomeMode("convo")} style={{ ...modeTab, ...(homeMode === "convo" ? modeOn : {}) }}>💬 대화</button>
           <button onClick={() => setHomeMode("lesson")} style={{ ...modeTab, ...(homeMode === "lesson" ? modeOn : {}) }}>📚 레슨</button>
           <button onClick={() => setHomeMode("review")} style={{ ...modeTab, ...(homeMode === "review" ? modeOn : {}) }}>📒 복습{review.length ? ` ${review.length}` : ""}</button>
+          <button onClick={() => setHomeMode("bookmark")} style={{ ...modeTab, ...(homeMode === "bookmark" ? modeOn : {}) }}>⭐ 북마크{bookmarks.length ? ` ${bookmarks.length}` : ""}</button>
         </div>
 
         {homeMode === "convo" ? (
@@ -459,8 +475,10 @@ export default function App() {
               ))}
             </div>
           </section>
-        ) : (
+        ) : homeMode === "review" ? (
           <ReviewList review={review} onSpeak={speak} onRemove={removeReview} onClear={clearReview} onGoConvo={() => setHomeMode("convo")} />
+        ) : (
+          <BookmarkList bookmarks={bookmarks} onSpeak={speak} onRemove={removeBookmark} onGoConvo={() => setHomeMode("convo")} />
         )}
         {!apiBase && !urlErr && <p style={{ textAlign: "center", color: "#8b90a6", fontSize: 13, marginTop: 16 }}>서버 연결 중…</p>}
       </div>
@@ -502,7 +520,10 @@ export default function App() {
                 <div key={idx} style={phraseCard}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                     <div style={{ fontSize: 17, fontWeight: 700 }}>{p.en}</div>
-                    <button onClick={() => speak(p.en)} style={{ ...phraseBtn, padding: "5px 10px", flexShrink: 0 }}>🔊</button>
+                    <span style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                      <button onClick={() => speak(p.en)} style={{ ...phraseBtn, padding: "5px 10px" }}>🔊</button>
+                      <button onClick={() => toggleBookmark(p.en, p.ko)} style={{ ...phraseBtn, padding: "5px 10px", ...(isBookmarked(p.en) ? { color: "#f0c860", borderColor: "#5a4a1f" } : {}) }}>{isBookmarked(p.en) ? "⭐" : "☆"}</button>
+                    </span>
                   </div>
                   <div style={{ fontSize: 13.5, color: "#a8adc4", marginTop: 3 }}>{p.ko}</div>
                   {p.note && <div style={noteBox}>💡 {p.note}</div>}
@@ -630,10 +651,11 @@ export default function App() {
                   <div style={{ fontSize: 16 }}>{m.text}</div>
                   {m.ko && showKo[i] && <div style={koText}>{m.ko}</div>}
                   {!m.error && (
-                    <div style={{ display: "flex", gap: 12, marginTop: 7 }}>
+                    <div style={{ display: "flex", gap: 12, marginTop: 7, flexWrap: "wrap" }}>
                       <button onClick={() => speak(m.text)} style={miniAction}>🔊 다시 듣기</button>
                       {m.ko && <button onClick={() => setShowKo((s) => ({ ...s, [i]: !s[i] }))} style={miniAction}>
                         {showKo[i] ? "뜻 숨기기" : "🇰🇷 뜻 보기"}</button>}
+                      <button onClick={() => toggleBookmark(m.text, m.ko)} style={miniAction}>{isBookmarked(m.text) ? "⭐ 저장됨" : "☆ 북마크"}</button>
                     </div>
                   )}
                 </div>
@@ -641,7 +663,7 @@ export default function App() {
             ) : (
               <div style={userRow}>
                 <div style={userBubble}>{m.text}</div>
-                {m.pron && <PronCard p={m.pron} />}
+                {m.pron && <PronCard p={m.pron} sentence={m.text} onSpeak={speak} bookmarked={isBookmarked(m.text)} onBookmark={() => toggleBookmark(m.text)} />}
                 {m.correction && <div style={correctionBox}>💡 {m.correction}</div>}
               </div>
             )}
@@ -671,13 +693,19 @@ export default function App() {
 }
 
 // 발음 점수 카드
-function PronCard({ p }) {
+function PronCard({ p, sentence, onSpeak, bookmarked, onBookmark }) {
   return (
     <div style={pronCard}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
         <span style={{ fontSize: 12, color: "#8b90a6", fontWeight: 700 }}>발음 점수</span>
         <span style={{ fontSize: 22, fontWeight: 800, color: scoreColor(p.pron) }}>{p.pron}</span>
         <span style={{ fontSize: 12, color: "#8b90a6" }}>/ 100</span>
+        {(onSpeak || onBookmark) && (
+          <span style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+            {onSpeak && sentence && <button onClick={() => onSpeak(sentence)} style={{ ...phraseBtn, padding: "5px 9px" }}>🔊 바른 발음</button>}
+            {onBookmark && <button onClick={onBookmark} style={{ ...phraseBtn, padding: "5px 9px", ...(bookmarked ? { color: "#f0c860", borderColor: "#5a4a1f" } : {}) }}>{bookmarked ? "⭐" : "☆"}</button>}
+          </span>
+        )}
       </div>
       <div style={{ display: "flex", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
         <Metric label="정확도" v={p.accuracy} />
@@ -760,6 +788,38 @@ function ReviewList({ review, onSpeak, onRemove, onClear, onGoConvo }) {
           ))}
         </>
       )}
+    </section>
+  );
+}
+
+// 북마크 목록
+function BookmarkList({ bookmarks, onSpeak, onRemove, onGoConvo }) {
+  if (!bookmarks.length) {
+    return (
+      <div style={{ textAlign: "center", padding: "30px 24px" }}>
+        <div style={{ fontSize: 34 }}>⭐</div>
+        <p style={{ color: "#8b90a6", fontSize: 14, lineHeight: 1.6, margin: "12px 0 18px" }}>
+          저장한 표현이 없어요.<br />대화나 레슨에서 마음에 드는 문장에<br />☆ 를 누르면 여기 모여요!
+        </p>
+        <button onClick={onGoConvo} style={{ ...roleplayBtn, width: "auto", padding: "12px 22px" }}>💬 대화 시작하기</button>
+      </div>
+    );
+  }
+  return (
+    <section style={{ padding: "0 18px" }}>
+      <p style={{ color: "#8b90a6", fontSize: 12.5, fontWeight: 700, margin: "0 0 12px" }}>저장한 표현 {bookmarks.length}개</p>
+      {bookmarks.map((b, i) => (
+        <div key={i} style={reviewCard}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+            <div style={{ fontSize: 15.5, fontWeight: 700 }}>{b.en}</div>
+            <span style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+              <button onClick={() => onSpeak(b.en)} style={{ ...phraseBtn, padding: "5px 9px" }}>🔊</button>
+              <button onClick={() => onRemove(b.en)} style={{ ...phraseBtn, padding: "5px 9px", color: "#f0c860", borderColor: "#5a4a1f" }}>⭐</button>
+            </span>
+          </div>
+          {b.ko && <div style={{ fontSize: 13, color: "#a8adc4", marginTop: 4 }}>{b.ko}</div>}
+        </div>
+      ))}
     </section>
   );
 }

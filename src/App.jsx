@@ -38,7 +38,13 @@ const LEVELS = [
 
 // ── 레슨 (일상 표현·패턴, 원본) ─────────────────────────────
 // cat: "상황" = 상황별 회화 / "패턴" = 문장 패턴. phrase.note = 사용 팁/뉘앙스.
-const LESSON_CATS = ["상황", "패턴"];
+const LESSON_CATS = ["상황", "패턴", "기능"];
+const CAT_LABEL = { 상황: "🗣️ 상황별", 패턴: "🔑 패턴", 기능: "💬 기능별" };
+const CAT_DESC = {
+  상황: "상황별 핵심 표현을 배우고 연습해요",
+  패턴: "자주 쓰는 문장 패턴을 익혀요",
+  기능: "동의·거절·부탁 같은 상황별 '기능' 표현",
+};
 const LESSONS = [
   // ── 상황별 ──
   { id: "cafe", cat: "상황", emoji: "☕", title: "카페 필수표현", desc: "음료 주문할 때", roleplay: "카페에서 커피 주문하기", phrases: [
@@ -129,6 +135,43 @@ const LESSONS = [
     { en: "I think I'm lost.", ko: "길을 잃은 것 같아요.", note: "확신 없이 말할 때 쿠션." },
     { en: "I don't think that's right.", ko: "그건 아닌 것 같아요.", note: "부정은 'I don't think'가 자연스러워요." },
   ] },
+
+  // ── 기능별 표현 ──
+  { id: "f-agree", cat: "기능", emoji: "👍", title: "동의·맞장구", desc: "상대 말에 공감할 때", roleplay: "상대 의견에 동의하며 대화하기", phrases: [
+    { en: "That's a good point.", ko: "좋은 지적이에요.", note: "상대 말에 동의하며 맞장구." },
+    { en: "I totally agree.", ko: "완전 동의해요.", note: "'totally'로 강하게 동의." },
+    { en: "Exactly!", ko: "맞아요, 바로 그거예요!", note: "짧고 강한 맞장구." },
+    { en: "That makes sense.", ko: "말 되네요.", note: "'이해가 된다'는 뜻으로 자주 써요." },
+    { en: "I feel the same way.", ko: "저도 같은 생각이에요.", note: "감정·의견 공감할 때." },
+  ] },
+  { id: "f-decline", cat: "기능", emoji: "🙅", title: "거절·사양", desc: "부드럽게 거절할 때", roleplay: "제안을 정중히 거절하기", phrases: [
+    { en: "I'll pass this time.", ko: "이번엔 사양할게요.", note: "'pass' = 이번엔 안 할게요(가볍게)." },
+    { en: "Maybe next time.", ko: "다음 기회에요.", note: "여지를 남기는 부드러운 거절." },
+    { en: "I'd rather not.", ko: "안 하는 게 좋겠어요.", note: "'I'd rather not' = 하고 싶지 않아요(정중)." },
+    { en: "Thanks, but I'm okay.", ko: "고맙지만 괜찮아요.", note: "감사 먼저 + 거절 쿠션." },
+    { en: "That doesn't really work for me.", ko: "저는 좀 어려울 것 같아요.", note: "직접 'No' 대신 부드럽게." },
+  ] },
+  { id: "f-ask", cat: "기능", emoji: "🙏", title: "부탁·요청", desc: "도움 청할 때", roleplay: "정중하게 부탁하기", phrases: [
+    { en: "Could you do me a favor?", ko: "부탁 하나 해도 될까요?", note: "부탁 꺼내기 전 여는 말." },
+    { en: "Would you mind helping me?", ko: "좀 도와주실 수 있어요?", note: "'Would you mind ~ing' = 아주 공손한 부탁." },
+    { en: "If it's not too much trouble...", ko: "괜찮으시다면…", note: "부담 덜어주는 쿠션 표현." },
+    { en: "I'd really appreciate it.", ko: "그래주시면 정말 감사하죠.", note: "부탁에 감사를 미리 얹기." },
+    { en: "Whenever you get a chance.", ko: "시간 되실 때 아무 때나요.", note: "재촉 안 하는 배려 표현." },
+  ] },
+  { id: "f-sorry", cat: "기능", emoji: "🙇", title: "사과", desc: "미안함을 전할 때", roleplay: "실수를 사과하고 수습하기", phrases: [
+    { en: "I'm really sorry.", ko: "정말 미안해요.", note: "기본 사과, 'really'로 진심 강조." },
+    { en: "That's my fault.", ko: "제 잘못이에요.", note: "책임 인정." },
+    { en: "I didn't mean to.", ko: "그럴 의도는 아니었어요.", note: "고의가 아니었음을 설명." },
+    { en: "It won't happen again.", ko: "다신 안 그럴게요.", note: "재발 방지 약속." },
+    { en: "Please accept my apology.", ko: "사과를 받아주세요.", note: "격식 있는 사과." },
+  ] },
+  { id: "f-react", cat: "기능", emoji: "😄", title: "감정 리액션", desc: "감정을 표현할 때", roleplay: "감정을 실감나게 표현하며 대화하기", phrases: [
+    { en: "That's amazing!", ko: "대박이에요!", note: "놀람·감탄 리액션." },
+    { en: "I'm so happy for you.", ko: "잘됐네요, 축하해요.", note: "상대의 좋은 일을 축하." },
+    { en: "That's too bad.", ko: "아쉽네요 / 안타깝네요.", note: "안 좋은 소식에 공감." },
+    { en: "No way!", ko: "헐, 진짜요?!", note: "놀랄 때 캐주얼 리액션." },
+    { en: "I can't believe it.", ko: "믿기지가 않아요.", note: "큰 놀람 표현." },
+  ] },
 ];
 
 // 녹음 지원 여부 (마이크로 발음평가). HTTPS + MediaRecorder 필요.
@@ -155,6 +198,9 @@ function persistReview(items) { try { localStorage.setItem(REVIEW_KEY, JSON.stri
 const BOOKMARK_KEY = "speak_bookmarks_v1";
 function loadBookmarks() { try { return JSON.parse(localStorage.getItem(BOOKMARK_KEY)) || []; } catch { return []; } }
 function persistBookmarks(items) { try { localStorage.setItem(BOOKMARK_KEY, JSON.stringify(items.slice(0, 300))); } catch {} }
+const LESSON_DONE_KEY = "speak_lesson_done_v1";
+function loadLessonDone() { try { return JSON.parse(localStorage.getItem(LESSON_DONE_KEY)) || []; } catch { return []; } }
+function persistLessonDone(ids) { try { localStorage.setItem(LESSON_DONE_KEY, JSON.stringify(ids)); } catch {} }
 
 const scoreColor = (n) => (n >= 80 ? "#63c187" : n >= 60 ? "#e0b64a" : "#e8724a");
 
@@ -198,6 +244,7 @@ export default function App() {
   const [streak, setStreak] = useState(() => loadStreak());
   const [review, setReview] = useState(() => loadReview());
   const [bookmarks, setBookmarks] = useState(() => loadBookmarks());
+  const [lessonDone, setLessonDone] = useState(() => loadLessonDone());
   const [unlocked, setUnlocked] = useState(() => {
     try { return localStorage.getItem(PIN_KEY) === "1"; } catch (e) { return false; }
   });
@@ -394,6 +441,16 @@ export default function App() {
   }, []);
   const removeBookmark = (en) => setBookmarks((prev) => { const n = prev.filter((b) => b.en !== en); persistBookmarks(n); return n; });
 
+  const markLessonDone = useCallback((id) => {
+    setLessonDone((prev) => { if (prev.includes(id)) return prev; const n = [...prev, id]; persistLessonDone(n); return n; });
+  }, []);
+  // 퀴즈 다 맞으면 그 레슨 완료 처리
+  useEffect(() => {
+    if (view === "lesson" && lesson && lesson.phrases.length && lesson.phrases.every((_, i) => quizState[i]?.correct)) {
+      markLessonDone(lesson.id);
+    }
+  }, [quizState, view, lesson, markLessonDone]);
+
   const openLesson = (l) => { setLesson(l); setLessonScores({}); setQuizState({}); setLessonStage("learn"); setView("lesson"); };
   const pickQuiz = (idx, choice, answer) => {
     setQuizState((s) => (s[idx]?.correct ? s : { ...s, [idx]: { picked: choice, correct: choice === answer } }));
@@ -457,22 +514,39 @@ export default function App() {
             <div style={{ display: "flex", gap: 6, padding: "0 18px", marginBottom: 14 }}>
               {LESSON_CATS.map((c) => (
                 <button key={c} onClick={() => setLessonCat(c)} style={{ ...catChip, ...(lessonCat === c ? catChipOn : {}) }}>
-                  {c === "상황" ? "🗣️ 상황별" : "🔑 패턴 표현"}
+                  {CAT_LABEL[c]}
                 </button>
               ))}
             </div>
-            <p style={sectionLabel}>{lessonCat === "상황" ? "상황별 핵심 표현을 배우고 연습해요" : "자주 쓰는 문장 패턴을 익혀요"}</p>
+            <p style={sectionLabel}>{CAT_DESC[lessonCat]}</p>
+            {(() => {
+              const catLs = LESSONS.filter((l) => l.cat === lessonCat);
+              const done = catLs.filter((l) => lessonDone.includes(l.id)).length;
+              return (
+                <div style={{ padding: "0 18px", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#8b90a6", marginBottom: 5 }}>
+                    <span>진행률</span><span>{done}/{catLs.length} 완료</span>
+                  </div>
+                  <div style={{ height: 7, background: "#1c2136", borderRadius: 999, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${catLs.length ? (done / catLs.length) * 100 : 0}%`, background: "#63c187", borderRadius: 999 }} />
+                  </div>
+                </div>
+              );
+            })()}
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "0 18px" }}>
-              {LESSONS.filter((l) => l.cat === lessonCat).map((l) => (
-                <button key={l.id} onClick={() => openLesson(l)} disabled={!apiBase} style={lessonItem}>
-                  <span style={{ fontSize: 24 }}>{l.emoji}</span>
-                  <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", flex: 1 }}>
-                    <span style={{ fontSize: 15.5, fontWeight: 700 }}>{l.title}</span>
-                    <span style={{ fontSize: 12, color: "#8b90a6" }}>{l.desc} · {l.phrases.length}문장</span>
-                  </span>
-                  <span style={{ color: "#8b90a6" }}>›</span>
-                </button>
-              ))}
+              {LESSONS.filter((l) => l.cat === lessonCat).map((l) => {
+                const isDone = lessonDone.includes(l.id);
+                return (
+                  <button key={l.id} onClick={() => openLesson(l)} disabled={!apiBase} style={lessonItem}>
+                    <span style={{ fontSize: 24 }}>{l.emoji}</span>
+                    <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", flex: 1 }}>
+                      <span style={{ fontSize: 15.5, fontWeight: 700 }}>{l.title}</span>
+                      <span style={{ fontSize: 12, color: "#8b90a6" }}>{l.desc} · {l.phrases.length}문장</span>
+                    </span>
+                    {isDone ? <span style={{ color: "#63c187", fontWeight: 800, fontSize: 15 }}>✓</span> : <span style={{ color: "#8b90a6" }}>›</span>}
+                  </button>
+                );
+              })}
             </div>
           </section>
         ) : homeMode === "review" ? (

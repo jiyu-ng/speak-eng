@@ -38,13 +38,14 @@ const LEVELS = [
 
 // ── 레슨 (일상 표현·패턴, 원본) ─────────────────────────────
 // cat: "상황" = 상황별 회화 / "패턴" = 문장 패턴. phrase.note = 사용 팁/뉘앙스.
-const LESSON_CATS = ["상황", "패턴", "기능", "어휘"];
-const CAT_LABEL = { 상황: "🗣️ 상황별", 패턴: "🔑 패턴", 기능: "💬 기능별", 어휘: "🔤 어휘" };
+const LESSON_CATS = ["상황", "패턴", "기능", "어휘", "발음"];
+const CAT_LABEL = { 상황: "🗣️ 상황별", 패턴: "🔑 패턴", 기능: "💬 기능별", 어휘: "🔤 어휘", 발음: "👄 발음" };
 const CAT_DESC = {
   상황: "상황별 핵심 표현을 배우고 연습해요",
   패턴: "자주 쓰는 문장 패턴을 익혀요",
   기능: "동의·거절·부탁 같은 상황별 '기능' 표현",
   어휘: "주제별 단어를 뜻·예문과 함께 익혀요",
+  발음: "한국인이 헷갈리는 발음쌍을 집중 연습",
 };
 const LESSONS = [
   // ── 상황별 ──
@@ -207,7 +208,30 @@ const LESSONS = [
     { en: "available", ko: "시간이 되는", note: "Are you available tomorrow afternoon?" },
     { en: "in charge", ko: "담당인", note: "Who is in charge of this project?" },
   ] },
+
+  // ── 발음 (kind: pron, 최소대립쌍) ──
+  { id: "pr-rl", cat: "발음", kind: "pron", emoji: "👄", title: "R vs L", desc: "제일 헷갈리는 R/L",
+    soundA: "R", tipA: "혀를 뒤로 살짝 말고, 어디에도 안 닿게 (으르렁 느낌)", soundB: "L", tipB: "혀끝을 윗니 바로 뒤에 딱 붙였다 떼기",
+    pairs: [["rice", "lice"], ["right", "light"], ["road", "load"], ["fry", "fly"], ["arrive", "alive"]],
+    phrases: [{ en: "rice" }, { en: "lice" }, { en: "right" }, { en: "light" }, { en: "road" }, { en: "load" }, { en: "fry" }, { en: "fly" }, { en: "arrive" }, { en: "alive" }] },
+  { id: "pr-fp", cat: "발음", kind: "pron", emoji: "👄", title: "F vs P", desc: "윗니로 무는 F",
+    soundA: "F", tipA: "윗니로 아랫입술을 살짝 물고 바람 (ㅍ 아님!)", soundB: "P", tipB: "두 입술 붙였다 터뜨리기 (한국어 ㅍ)",
+    pairs: [["fan", "pan"], ["fine", "pine"], ["coffee", "copy"], ["cuff", "cup"], ["leaf", "leap"]],
+    phrases: [{ en: "fan" }, { en: "pan" }, { en: "fine" }, { en: "pine" }, { en: "coffee" }, { en: "copy" }, { en: "cuff" }, { en: "cup" }, { en: "leaf" }, { en: "leap" }] },
+  { id: "pr-bv", cat: "발음", kind: "pron", emoji: "👄", title: "B vs V", desc: "윗니로 무는 V",
+    soundA: "B", tipA: "두 입술 붙였다 터뜨리기 (한국어 ㅂ)", soundB: "V", tipB: "윗니로 아랫입술 물고 성대 울리며 바람",
+    pairs: [["base", "vase"], ["best", "vest"], ["boat", "vote"], ["ban", "van"], ["curb", "curve"]],
+    phrases: [{ en: "base" }, { en: "vase" }, { en: "best" }, { en: "vest" }, { en: "boat" }, { en: "vote" }, { en: "ban" }, { en: "van" }, { en: "curb" }, { en: "curve" }] },
+  { id: "pr-th", cat: "발음", kind: "pron", emoji: "👄", title: "TH vs S", desc: "혀 내미는 TH",
+    soundA: "TH", tipA: "혀끝을 윗니 사이로 살짝 내밀고 바람 (혀 보이게)", soundB: "S", tipB: "혀를 입 안에 두고 ㅅ 바람",
+    pairs: [["think", "sink"], ["thin", "sin"], ["thick", "sick"], ["mouth", "mouse"], ["path", "pass"]],
+    phrases: [{ en: "think" }, { en: "sink" }, { en: "thin" }, { en: "sin" }, { en: "thick" }, { en: "sick" }, { en: "mouth" }, { en: "mouse" }, { en: "path" }, { en: "pass" }] },
 ];
+
+// 발음 듣기 퀴즈: 재생된 단어가 둘 중 어느 것인지 고르기
+function pronQuizFor(lesson) {
+  return lesson.pairs.map(([a, b], idx) => ({ idx, answer: idx % 2 === 0 ? a : b, options: [a, b] }));
+}
 
 // 어휘 퀴즈: 영어 단어 → 알맞은 뜻 고르기
 function vocabQuizFor(lesson) {
@@ -251,7 +275,7 @@ function persistLessonDone(ids) { try { localStorage.setItem(LESSON_DONE_KEY, JS
 const scoreColor = (n) => (n >= 80 ? "#63c187" : n >= 60 ? "#e0b64a" : "#e8724a");
 
 // 전체 표현 풀 (오늘의 표현 데일리 픽용)
-const ALL_PHRASES = LESSONS.flatMap((l) => l.phrases.map((p) => ({ ...p, lessonTitle: l.title })));
+const ALL_PHRASES = LESSONS.flatMap((l) => l.phrases.filter((p) => p.ko && p.note).map((p) => ({ ...p, lessonTitle: l.title })));
 const dailyPhrase = () => {
   const seed = Number(todayStr().replace(/-/g, "")) || 0;
   return ALL_PHRASES[seed % ALL_PHRASES.length];
@@ -638,10 +662,13 @@ export default function App() {
   // ── 렌더: 레슨 연습 (4단계) ──
   if (view === "lesson" && lesson) {
     const isVocab = lesson.kind === "vocab";
-    const STAGES = isVocab
+    const isPron = lesson.kind === "pron";
+    const STAGES = isPron
+      ? [{ key: "learn", label: "📖 배우기" }, { key: "speak", label: "🎤 말하기" }, { key: "quiz", label: "👂 듣기 퀴즈" }]
+      : isVocab
       ? [{ key: "learn", label: "📖 배우기" }, { key: "speak", label: "🎤 말하기" }, { key: "quiz", label: "🧩 뜻 퀴즈" }]
       : [{ key: "learn", label: "📖 배우기" }, { key: "speak", label: "🎤 말하기" }, { key: "quiz", label: "🧩 퀴즈" }, { key: "roleplay", label: "🎭 롤플레이" }];
-    const quiz = isVocab ? vocabQuizFor(lesson) : quizFor(lesson);
+    const quiz = isPron ? pronQuizFor(lesson) : isVocab ? vocabQuizFor(lesson) : quizFor(lesson);
     const quizDone = quiz.every((q) => quizState[q.idx]?.correct);
     return (
       <div style={wrap}>
@@ -661,7 +688,30 @@ export default function App() {
         </div>
 
         <div style={{ padding: "16px 16px 40px", overflowY: "auto" }}>
-          {lessonStage === "learn" && (
+          {lessonStage === "learn" && isPron && (
+            <>
+              <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 14px" }}>두 소리의 차이를 익히고, 🔊로 들으며 비교해봐요!</p>
+              <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                <div style={{ ...phraseCard, flex: 1, marginBottom: 0 }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#7f9cf5" }}>{lesson.soundA}</div>
+                  <div style={{ fontSize: 12.5, color: "#a8adc4", marginTop: 6, lineHeight: 1.5 }}>💡 {lesson.tipA}</div>
+                </div>
+                <div style={{ ...phraseCard, flex: 1, marginBottom: 0 }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#e8865a" }}>{lesson.soundB}</div>
+                  <div style={{ fontSize: 12.5, color: "#a8adc4", marginTop: 6, lineHeight: 1.5 }}>💡 {lesson.tipB}</div>
+                </div>
+              </div>
+              {lesson.pairs.map(([a, b], idx) => (
+                <div key={idx} style={{ ...phraseCard, display: "flex", alignItems: "center", gap: 8 }}>
+                  <button onClick={() => speak(a)} style={{ ...phraseBtn, flex: 1, color: "#7f9cf5" }}>🔊 {a}</button>
+                  <span style={{ color: "#6b7089", fontSize: 12 }}>vs</span>
+                  <button onClick={() => speak(b)} style={{ ...phraseBtn, flex: 1, color: "#e8865a" }}>🔊 {b}</button>
+                </div>
+              ))}
+              <button onClick={() => setLessonStage("speak")} style={roleplayBtn}>🎤 따라 말하기 연습 →</button>
+            </>
+          )}
+          {lessonStage === "learn" && !isPron && (
             <>
               <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 14px" }}>표현을 눈으로 익히고 🔊로 들어봐요. 다 보면 🎤 말하기로!</p>
               {lesson.phrases.map((p, idx) => (
@@ -728,12 +778,17 @@ export default function App() {
 
           {lessonStage === "quiz" && (
             <>
-              <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 14px" }}>{isVocab ? "단어의 알맞은 뜻을 골라요!" : "빈칸에 알맞은 단어를 골라요. 뜻을 보고 맞춰봐요!"}</p>
+              <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 14px" }}>{isPron ? "🔊를 눌러 듣고, 어느 단어였는지 골라요!" : isVocab ? "단어의 알맞은 뜻을 골라요!" : "빈칸에 알맞은 단어를 골라요. 뜻을 보고 맞춰봐요!"}</p>
               {quiz.map((q) => {
                 const st = quizState[q.idx];
                 return (
                   <div key={q.idx} style={phraseCard}>
-                    {isVocab ? (
+                    {isPron ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                        <button onClick={() => speak(q.answer)} style={{ ...phraseBtn }}>🔊 듣기</button>
+                        <span style={{ fontSize: 13.5, color: "#a8adc4" }}>어느 단어였을까요?</span>
+                      </div>
+                    ) : isVocab ? (
                       <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 10 }}>{q.word} <span style={{ fontSize: 12.5, color: "#8b90a6", fontWeight: 500 }}>의 뜻은?</span></div>
                     ) : (<>
                       <div style={{ fontSize: 13, color: "#a8adc4", marginBottom: 4 }}>{q.ko}</div>
@@ -756,14 +811,14 @@ export default function App() {
                         );
                       })}
                     </div>
-                    {st && (st.correct ? <div style={{ color: "#8fe0a8", fontSize: 12.5, marginTop: 8 }}>✅ 정답! “{lesson.phrases[q.idx].en}”</div>
+                    {st && (st.correct ? <div style={{ color: "#8fe0a8", fontSize: 12.5, marginTop: 8 }}>✅ 정답! “{isPron ? q.answer : isVocab ? q.word : lesson.phrases[q.idx].en}”</div>
                       : <div style={{ color: "#f0a0a0", fontSize: 12.5, marginTop: 8 }}>다시 골라봐요!</div>)}
                   </div>
                 );
               })}
-              {isVocab ? (
+              {(isVocab || isPron) ? (
                 <div style={{ textAlign: "center", padding: "12px 0 4px" }}>
-                  {quizDone ? <p style={{ color: "#8fe0a8", fontWeight: 700, margin: 0 }}>🎉 이 단어장 완료! 잘했어요</p>
+                  {quizDone ? <p style={{ color: "#8fe0a8", fontWeight: 700, margin: 0 }}>🎉 {isPron ? "발음 레슨" : "이 단어장"} 완료! 잘했어요</p>
                     : <p style={{ color: "#8b90a6", fontSize: 13, margin: 0 }}>퀴즈를 다 맞히면 완료돼요</p>}
                 </div>
               ) : (

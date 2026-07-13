@@ -38,12 +38,13 @@ const LEVELS = [
 
 // ── 레슨 (일상 표현·패턴, 원본) ─────────────────────────────
 // cat: "상황" = 상황별 회화 / "패턴" = 문장 패턴. phrase.note = 사용 팁/뉘앙스.
-const LESSON_CATS = ["상황", "패턴", "기능"];
-const CAT_LABEL = { 상황: "🗣️ 상황별", 패턴: "🔑 패턴", 기능: "💬 기능별" };
+const LESSON_CATS = ["상황", "패턴", "기능", "어휘"];
+const CAT_LABEL = { 상황: "🗣️ 상황별", 패턴: "🔑 패턴", 기능: "💬 기능별", 어휘: "🔤 어휘" };
 const CAT_DESC = {
   상황: "상황별 핵심 표현을 배우고 연습해요",
   패턴: "자주 쓰는 문장 패턴을 익혀요",
   기능: "동의·거절·부탁 같은 상황별 '기능' 표현",
+  어휘: "주제별 단어를 뜻·예문과 함께 익혀요",
 };
 const LESSONS = [
   // ── 상황별 ──
@@ -172,7 +173,52 @@ const LESSONS = [
     { en: "No way!", ko: "헐, 진짜요?!", note: "놀랄 때 캐주얼 리액션." },
     { en: "I can't believe it.", ko: "믿기지가 않아요.", note: "큰 놀람 표현." },
   ] },
+
+  // ── 주제별 어휘 (kind: vocab, note = 예문) ──
+  { id: "v-food", cat: "어휘", kind: "vocab", emoji: "🍔", title: "음식·식당", desc: "food & dining", phrases: [
+    { en: "delicious", ko: "맛있는", note: "This soup is really delicious." },
+    { en: "spicy", ko: "매운", note: "Korean food can be quite spicy." },
+    { en: "appetizer", ko: "전채요리", note: "Let's start with an appetizer." },
+    { en: "refill", ko: "리필", note: "Can I get a free refill?" },
+    { en: "takeout", ko: "포장(음식)", note: "I'd like this for takeout." },
+    { en: "vegetarian", ko: "채식주의자", note: "Do you have vegetarian options?" },
+  ] },
+  { id: "v-travel", cat: "어휘", kind: "vocab", emoji: "✈️", title: "여행", desc: "travel", phrases: [
+    { en: "reservation", ko: "예약", note: "I have a reservation under Jiyoo." },
+    { en: "luggage", ko: "짐, 수하물", note: "Where can I pick up my luggage?" },
+    { en: "departure", ko: "출발", note: "What time is the departure?" },
+    { en: "delay", ko: "지연", note: "The flight was delayed by an hour." },
+    { en: "currency", ko: "화폐, 통화", note: "Where can I exchange currency?" },
+    { en: "sightseeing", ko: "관광", note: "We went sightseeing all day." },
+  ] },
+  { id: "v-emotion", cat: "어휘", kind: "vocab", emoji: "😊", title: "감정", desc: "emotions", phrases: [
+    { en: "excited", ko: "신난, 들뜬", note: "I'm so excited about the trip!" },
+    { en: "nervous", ko: "긴장한", note: "I always feel nervous before a test." },
+    { en: "grateful", ko: "감사하는", note: "I'm really grateful for your help." },
+    { en: "disappointed", ko: "실망한", note: "I was a little disappointed." },
+    { en: "relieved", ko: "안도한", note: "I'm so relieved it's finally over." },
+    { en: "proud", ko: "자랑스러운", note: "I'm really proud of you." },
+  ] },
+  { id: "v-business", cat: "어휘", kind: "vocab", emoji: "💼", title: "비즈니스", desc: "business", phrases: [
+    { en: "deadline", ko: "마감기한", note: "The deadline is this Friday." },
+    { en: "schedule", ko: "일정(잡다)", note: "Let's schedule a meeting for Monday." },
+    { en: "feedback", ko: "피드백", note: "Thank you for your honest feedback." },
+    { en: "budget", ko: "예산", note: "We're a bit over budget." },
+    { en: "available", ko: "시간이 되는", note: "Are you available tomorrow afternoon?" },
+    { en: "in charge", ko: "담당인", note: "Who is in charge of this project?" },
+  ] },
 ];
+
+// 어휘 퀴즈: 영어 단어 → 알맞은 뜻 고르기
+function vocabQuizFor(lesson) {
+  const metas = lesson.phrases.map((p) => p.ko);
+  return lesson.phrases.map((p, idx) => {
+    const answer = p.ko;
+    const pool = [...new Set(metas.filter((m, i) => i !== idx && m !== answer))];
+    const options = shuffle([answer, ...shuffle(pool).slice(0, 2)]);
+    return { idx, word: p.en, answer, options };
+  });
+}
 
 // 녹음 지원 여부 (마이크로 발음평가). HTTPS + MediaRecorder 필요.
 const HAS_REC = typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia && typeof window.MediaRecorder !== "undefined";
@@ -591,13 +637,11 @@ export default function App() {
 
   // ── 렌더: 레슨 연습 (4단계) ──
   if (view === "lesson" && lesson) {
-    const STAGES = [
-      { key: "learn", label: "📖 배우기" },
-      { key: "speak", label: "🎤 말하기" },
-      { key: "quiz", label: "🧩 퀴즈" },
-      { key: "roleplay", label: "🎭 롤플레이" },
-    ];
-    const quiz = quizFor(lesson);
+    const isVocab = lesson.kind === "vocab";
+    const STAGES = isVocab
+      ? [{ key: "learn", label: "📖 배우기" }, { key: "speak", label: "🎤 말하기" }, { key: "quiz", label: "🧩 뜻 퀴즈" }]
+      : [{ key: "learn", label: "📖 배우기" }, { key: "speak", label: "🎤 말하기" }, { key: "quiz", label: "🧩 퀴즈" }, { key: "roleplay", label: "🎭 롤플레이" }];
+    const quiz = isVocab ? vocabQuizFor(lesson) : quizFor(lesson);
     const quizDone = quiz.every((q) => quizState[q.idx]?.correct);
     return (
       <div style={wrap}>
@@ -684,13 +728,17 @@ export default function App() {
 
           {lessonStage === "quiz" && (
             <>
-              <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 14px" }}>빈칸에 알맞은 단어를 골라요. 뜻을 보고 맞춰봐요!</p>
+              <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 14px" }}>{isVocab ? "단어의 알맞은 뜻을 골라요!" : "빈칸에 알맞은 단어를 골라요. 뜻을 보고 맞춰봐요!"}</p>
               {quiz.map((q) => {
                 const st = quizState[q.idx];
                 return (
                   <div key={q.idx} style={phraseCard}>
-                    <div style={{ fontSize: 13, color: "#a8adc4", marginBottom: 4 }}>{q.ko}</div>
-                    <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{q.prompt}</div>
+                    {isVocab ? (
+                      <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 10 }}>{q.word} <span style={{ fontSize: 12.5, color: "#8b90a6", fontWeight: 500 }}>의 뜻은?</span></div>
+                    ) : (<>
+                      <div style={{ fontSize: 13, color: "#a8adc4", marginBottom: 4 }}>{q.ko}</div>
+                      <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{q.prompt}</div>
+                    </>)}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                       {q.options.map((opt) => {
                         const chosen = st?.picked === opt;
@@ -713,9 +761,16 @@ export default function App() {
                   </div>
                 );
               })}
-              <button onClick={() => setLessonStage("roleplay")} style={{ ...roleplayBtn, opacity: quizDone ? 1 : 0.6 }}>
-                {quizDone ? "🎭 롤플레이로 써먹기 →" : "🎭 롤플레이로 넘어가기 (퀴즈 다 풀면 좋아요)"}
-              </button>
+              {isVocab ? (
+                <div style={{ textAlign: "center", padding: "12px 0 4px" }}>
+                  {quizDone ? <p style={{ color: "#8fe0a8", fontWeight: 700, margin: 0 }}>🎉 이 단어장 완료! 잘했어요</p>
+                    : <p style={{ color: "#8b90a6", fontSize: 13, margin: 0 }}>퀴즈를 다 맞히면 완료돼요</p>}
+                </div>
+              ) : (
+                <button onClick={() => setLessonStage("roleplay")} style={{ ...roleplayBtn, opacity: quizDone ? 1 : 0.6 }}>
+                  {quizDone ? "🎭 롤플레이로 써먹기 →" : "🎭 롤플레이로 넘어가기 (퀴즈 다 풀면 좋아요)"}
+                </button>
+              )}
             </>
           )}
 

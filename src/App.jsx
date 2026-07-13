@@ -204,6 +204,13 @@ function persistLessonDone(ids) { try { localStorage.setItem(LESSON_DONE_KEY, JS
 
 const scoreColor = (n) => (n >= 80 ? "#63c187" : n >= 60 ? "#e0b64a" : "#e8724a");
 
+// 전체 표현 풀 (오늘의 표현 데일리 픽용)
+const ALL_PHRASES = LESSONS.flatMap((l) => l.phrases.map((p) => ({ ...p, lessonTitle: l.title })));
+const dailyPhrase = () => {
+  const seed = Number(todayStr().replace(/-/g, "")) || 0;
+  return ALL_PHRASES[seed % ALL_PHRASES.length];
+};
+
 const shuffle = (a) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
 // 레슨 문장들로 빈칸 채우기 퀴즈 생성 (각 문장에서 가장 긴 단어를 빈칸으로)
 function quizFor(lesson) {
@@ -488,6 +495,29 @@ export default function App() {
 
         {homeMode === "convo" ? (
           <>
+            {(() => {
+              const d = dailyPhrase();
+              const recLesson = LESSONS.find((l) => !lessonDone.includes(l.id));
+              return (
+                <div style={{ padding: "0 18px", marginBottom: 20 }}>
+                  <div style={dailyCard}>
+                    <div style={{ fontSize: 12, color: "#f0c88a", fontWeight: 700, marginBottom: 8 }}>🌅 오늘의 표현</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 3 }}>{d.en}</div>
+                    <div style={{ fontSize: 13.5, color: "#a8adc4" }}>{d.ko}</div>
+                    {d.note && <div style={{ fontSize: 12, color: "#8b90a6", marginTop: 6 }}>💡 {d.note}</div>}
+                    <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+                      <button onClick={() => speak(d.en)} style={miniAction}>🔊 듣기</button>
+                      <button onClick={() => toggleBookmark(d.en, d.ko)} style={miniAction}>{isBookmarked(d.en) ? "⭐ 저장됨" : "☆ 북마크"}</button>
+                    </div>
+                  </div>
+                  {recLesson && (
+                    <button onClick={() => { setHomeMode("lesson"); setLessonCat(recLesson.cat); openLesson(recLesson); }} style={recLessonBtn}>
+                      📚 오늘 추천 레슨 — {recLesson.emoji} {recLesson.title} 시작하기 →
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
             <section style={{ marginBottom: 18 }}>
               <p style={sectionLabel}>난이도</p>
               <div style={{ display: "flex", gap: 8, padding: "0 18px" }}>
@@ -976,3 +1006,5 @@ const catChipOn = { background: "#2a3358", color: "#cdd7ff", borderColor: "#4c6e
 const stageTab = { flexShrink: 0, padding: "8px 12px", borderRadius: 10, border: "1px solid #262a3d", background: "#171b2c", color: "#8b90a6", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" };
 const stageTabOn = { background: "#4c6ef5", color: "#fff", borderColor: "#4c6ef5" };
 const noteBox = { marginTop: 8, background: "#161d18", border: "1px solid #2a3a2c", borderRadius: 10, padding: "8px 11px", fontSize: 12.5, color: "#a8cbb0", lineHeight: 1.5 };
+const dailyCard = { background: "linear-gradient(135deg, #241f2e, #1a1d2e)", border: "1px solid #3a2f4a", borderRadius: 16, padding: "16px 16px" };
+const recLessonBtn = { width: "100%", marginTop: 10, padding: "13px 14px", borderRadius: 13, border: "1px solid #2f3550", background: "#171b2c", color: "#cdd7ff", fontSize: 13.5, fontWeight: 700, cursor: "pointer", textAlign: "left" };

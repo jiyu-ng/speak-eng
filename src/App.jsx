@@ -38,14 +38,15 @@ const LEVELS = [
 
 // ── 레슨 (일상 표현·패턴, 원본) ─────────────────────────────
 // cat: "상황" = 상황별 회화 / "패턴" = 문장 패턴. phrase.note = 사용 팁/뉘앙스.
-const LESSON_CATS = ["상황", "패턴", "기능", "어휘", "발음"];
-const CAT_LABEL = { 상황: "🗣️ 상황별", 패턴: "🔑 패턴", 기능: "💬 기능별", 어휘: "🔤 어휘", 발음: "👄 발음" };
+const LESSON_CATS = ["상황", "패턴", "기능", "어휘", "발음", "듣기"];
+const CAT_LABEL = { 상황: "🗣️ 상황별", 패턴: "🔑 패턴", 기능: "💬 기능별", 어휘: "🔤 어휘", 발음: "👄 발음", 듣기: "👂 듣기" };
 const CAT_DESC = {
   상황: "상황별 핵심 표현을 배우고 연습해요",
   패턴: "자주 쓰는 문장 패턴을 익혀요",
   기능: "동의·거절·부탁 같은 상황별 '기능' 표현",
   어휘: "주제별 단어를 뜻·예문과 함께 익혀요",
   발음: "한국인이 헷갈리는 발음쌍을 집중 연습",
+  듣기: "문장을 듣고 받아쓰기로 귀를 뚫어요",
 };
 const LESSONS = [
   // ── 상황별 ──
@@ -226,6 +227,22 @@ const LESSONS = [
     soundA: "TH", tipA: "혀끝을 윗니 사이로 살짝 내밀고 바람 (혀 보이게)", soundB: "S", tipB: "혀를 입 안에 두고 ㅅ 바람",
     pairs: [["think", "sink"], ["thin", "sin"], ["thick", "sick"], ["mouth", "mouse"], ["path", "pass"]],
     phrases: [{ en: "think" }, { en: "sink" }, { en: "thin" }, { en: "sin" }, { en: "thick" }, { en: "sick" }, { en: "mouth" }, { en: "mouse" }, { en: "path" }, { en: "pass" }] },
+
+  // ── 듣기 (kind: dictation, 받아쓰기) ──
+  { id: "d-daily", cat: "듣기", kind: "dictation", emoji: "🎧", title: "일상 문장", desc: "기초 받아쓰기", phrases: [
+    { en: "Where are you from?", ko: "어디서 오셨어요?" },
+    { en: "What time is it now?", ko: "지금 몇 시예요?" },
+    { en: "I'll have a coffee, please.", ko: "커피 한 잔 주세요." },
+    { en: "How much does it cost?", ko: "얼마예요?" },
+    { en: "Can you help me, please?", ko: "좀 도와주시겠어요?" },
+  ] },
+  { id: "d-travel", cat: "듣기", kind: "dictation", emoji: "🎧", title: "여행 문장", desc: "여행 받아쓰기", phrases: [
+    { en: "Where is the nearest station?", ko: "가장 가까운 역이 어디예요?" },
+    { en: "I'd like to check in, please.", ko: "체크인 하려고요." },
+    { en: "Could you take a picture?", ko: "사진 좀 찍어주시겠어요?" },
+    { en: "Is there a bank nearby?", ko: "근처에 은행 있어요?" },
+    { en: "I think I'm lost.", ko: "길을 잃은 것 같아요." },
+  ] },
 ];
 
 // 발음 듣기 퀴즈: 재생된 단어가 둘 중 어느 것인지 고르기
@@ -660,6 +677,9 @@ export default function App() {
   }
 
   // ── 렌더: 레슨 연습 (4단계) ──
+  if (view === "lesson" && lesson && lesson.kind === "dictation") {
+    return <DictationView lesson={lesson} speak={speak} onBack={() => { window.speechSynthesis?.cancel(); setView("home"); }} onComplete={() => markLessonDone(lesson.id)} />;
+  }
   if (view === "lesson" && lesson) {
     const isVocab = lesson.kind === "vocab";
     const isPron = lesson.kind === "pron";
@@ -1035,6 +1055,70 @@ function BookmarkList({ bookmarks, onSpeak, onRemove, onGoConvo }) {
         </div>
       ))}
     </section>
+  );
+}
+
+// 받아쓰기(dictation) 뷰
+function DictationView({ lesson, speak, onBack, onComplete }) {
+  const [state, setState] = useState({}); // {idx: {input, checked}}
+  const norm = (s) => (s || "").toLowerCase().replace(/[.,!?'"]/g, "").trim().split(/\s+/).filter(Boolean);
+  const allChecked = lesson.phrases.every((_, i) => state[i]?.checked);
+  useEffect(() => { if (allChecked) onComplete(); }, [allChecked, onComplete]);
+  const scored = (i) => {
+    const p = lesson.phrases[i];
+    const answerWords = p.en.split(/\s+/);
+    const t = norm(state[i]?.input || "");
+    const na = norm(p.en);
+    const got = na.filter((w, k) => t[k] === w).length;
+    return { answerWords, na, got, total: na.length };
+  };
+  return (
+    <div style={wrap}>
+      <header style={chatHead}>
+        <button onClick={onBack} style={backBtn}>←</button>
+        <div style={{ textAlign: "center", flex: 1 }}>
+          <div style={{ fontWeight: 800 }}>{lesson.emoji} {lesson.title}</div>
+          <div style={{ fontSize: 11, color: "#8b90a6" }}>듣고 받아쓰기 · 스픽메이트</div>
+        </div>
+        <div style={{ width: 34 }} />
+      </header>
+      <div style={{ padding: "16px 16px 40px", overflowY: "auto" }}>
+        <p style={{ color: "#8b90a6", fontSize: 13, margin: "0 0 14px" }}>🔊 듣고 들리는 대로 타이핑한 뒤 "확인"을 눌러요!</p>
+        {lesson.phrases.map((p, i) => {
+          const st = state[i] || {};
+          const s = st.checked ? scored(i) : null;
+          return (
+            <div key={i} style={phraseCard}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <button onClick={() => speak(p.en)} style={phraseBtn}>🔊 듣기</button>
+                <span style={{ fontSize: 12, color: "#6b7089" }}>#{i + 1}</span>
+                {st.checked && s && <span style={{ marginLeft: "auto", fontSize: 13, fontWeight: 800, color: scoreColor(Math.round((s.got / s.total) * 100)) }}>{s.got}/{s.total}</span>}
+              </div>
+              {!st.checked ? (
+                <>
+                  <input value={st.input || ""} onChange={(e) => setState((v) => ({ ...v, [i]: { ...v[i], input: e.target.value } }))}
+                    onKeyDown={(e) => e.key === "Enter" && setState((v) => ({ ...v, [i]: { ...v[i], checked: true } }))}
+                    placeholder="들리는 대로 영어로 입력" style={{ ...textInput, width: "100%", boxSizing: "border-box", marginBottom: 8 }} />
+                  <button onClick={() => setState((v) => ({ ...v, [i]: { ...v[i], checked: true } }))} style={{ ...phraseBtn, width: "100%" }}>확인</button>
+                </>
+              ) : (
+                <div>
+                  <div style={{ fontSize: 12, color: "#8b90a6", marginBottom: 3 }}>정답</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>
+                    {s.answerWords.map((w, k) => (
+                      <span key={k} style={{ color: norm(st.input)[k] === s.na[k] ? "#8fe0a8" : "#f0a0a0" }}>{w} </span>
+                    ))}
+                  </div>
+                  {p.ko && <div style={{ fontSize: 12.5, color: "#a8adc4", marginBottom: 8 }}>{p.ko}</div>}
+                  <button onClick={() => setState((v) => ({ ...v, [i]: { input: "", checked: false } }))} style={{ ...phraseBtn }}>다시 풀기</button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {allChecked && <p style={{ textAlign: "center", color: "#8fe0a8", fontWeight: 700, marginTop: 10 }}>🎉 받아쓰기 완료! 잘했어요</p>}
+      </div>
+    </div>
   );
 }
 

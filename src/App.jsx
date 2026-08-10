@@ -693,7 +693,7 @@ export default function App() {
     return (
       <div style={wrap}>
         <header style={chatHead}>
-          <button onClick={() => { window.speechSynthesis?.cancel(); setView("home"); }} style={backBtn}>←</button>
+          <button onClick={() => { window.speechSynthesis?.cancel(); setView("home"); }} style={backBtn} aria-label="뒤로 가기">←</button>
           <div style={{ textAlign: "center", flex: 1 }}>
             <div style={{ fontWeight: 800 }}>{lesson.emoji} {lesson.title}</div>
             <div style={{ fontSize: 11, color: "#8b90a6" }}>{lesson.cat === "패턴" ? lesson.desc : "핵심표현 배우기"} · 스픽메이트</div>
@@ -868,7 +868,7 @@ export default function App() {
   return (
     <div style={wrap}>
       <header style={chatHead}>
-        <button onClick={() => { window.speechSynthesis?.cancel(); setView("home"); }} style={backBtn}>←</button>
+        <button onClick={() => { window.speechSynthesis?.cancel(); setView("home"); }} style={backBtn} aria-label="뒤로 가기">←</button>
         <div style={{ textAlign: "center", flex: 1 }}>
           <div style={{ fontWeight: 800 }}>{scenario?.emoji} {scenario?.label}</div>
           <div style={{ fontSize: 11, color: "#8b90a6" }}>{LEVELS.find((l) => l.key === level)?.label} · 스픽메이트</div>
@@ -1075,7 +1075,7 @@ function DictationView({ lesson, speak, onBack, onComplete }) {
   return (
     <div style={wrap}>
       <header style={chatHead}>
-        <button onClick={onBack} style={backBtn}>←</button>
+        <button onClick={onBack} style={backBtn} aria-label="뒤로 가기">←</button>
         <div style={{ textAlign: "center", flex: 1 }}>
           <div style={{ fontWeight: 800 }}>{lesson.emoji} {lesson.title}</div>
           <div style={{ fontSize: 11, color: "#8b90a6" }}>듣고 받아쓰기 · 스픽메이트</div>

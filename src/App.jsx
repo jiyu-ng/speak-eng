@@ -739,8 +739,8 @@ export default function App() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                     <div style={{ fontSize: 17, fontWeight: 700 }}>{p.en}</div>
                     <span style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                      <button onClick={() => speak(p.en)} style={{ ...phraseBtn, padding: "5px 10px" }}>🔊</button>
-                      <button onClick={() => toggleBookmark(p.en, p.ko)} style={{ ...phraseBtn, padding: "5px 10px", ...(isBookmarked(p.en) ? { color: "#f0c860", borderColor: "#5a4a1f" } : {}) }}>{isBookmarked(p.en) ? "⭐" : "☆"}</button>
+                      <button onClick={() => speak(p.en)} style={{ ...phraseBtn, padding: "5px 10px" }} aria-label={`${p.en} 발음 듣기`}>🔊</button>
+                      <button onClick={() => toggleBookmark(p.en, p.ko)} style={{ ...phraseBtn, padding: "5px 10px", ...(isBookmarked(p.en) ? { color: "#f0c860", borderColor: "#5a4a1f" } : {}) }} aria-label={isBookmarked(p.en) ? "북마크 해제" : "북마크에 저장"}>{isBookmarked(p.en) ? "⭐" : "☆"}</button>
                     </span>
                   </div>
                   <div style={{ fontSize: 13.5, color: "#a8adc4", marginTop: 3 }}>{p.ko}</div>
@@ -911,13 +911,14 @@ export default function App() {
       <div style={inputBar}>
         {HAS_REC && (
           <button onClick={recActive === "chat" ? endRec : () => beginRec(null)} disabled={analyzing || loading}
-            style={{ ...micBtn, ...(recActive === "chat" ? micOn : {}) }} title="녹음해서 발음 평가">
+            style={{ ...micBtn, ...(recActive === "chat" ? micOn : {}) }} title="녹음해서 발음 평가"
+            aria-label={recActive === "chat" ? "녹음 끝내기" : "녹음해서 발음 평가"}>
             {recActive === "chat" ? "■" : "🎤"}
           </button>
         )}
         <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
           placeholder={recActive === "chat" ? "녹음 중… ■ 눌러 끝내기" : "영어로 답하기 (또는 🎤 말하기)"} style={textInput} disabled={recActive === "chat"} />
-        <button onClick={() => send()} disabled={loading || analyzing || !input.trim()} style={sendBtn}>↑</button>
+        <button onClick={() => send()} disabled={loading || analyzing || !input.trim()} style={sendBtn} aria-label="메시지 보내기">↑</button>
       </div>
       <p style={sttNote}>
         {HAS_REC ? "🎤 마이크로 말하면 AI가 발음까지 분석해줘요 · 타이핑도 OK" : "ℹ️ 이 브라우저는 녹음이 안 돼서 타이핑으로 답해요."}
@@ -937,7 +938,7 @@ function PronCard({ p, sentence, onSpeak, bookmarked, onBookmark }) {
         {(onSpeak || onBookmark) && (
           <span style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
             {onSpeak && sentence && <button onClick={() => onSpeak(sentence)} style={{ ...phraseBtn, padding: "5px 9px" }}>🔊 바른 발음</button>}
-            {onBookmark && <button onClick={onBookmark} style={{ ...phraseBtn, padding: "5px 9px", ...(bookmarked ? { color: "#f0c860", borderColor: "#5a4a1f" } : {}) }}>{bookmarked ? "⭐" : "☆"}</button>}
+            {onBookmark && <button onClick={onBookmark} style={{ ...phraseBtn, padding: "5px 9px", ...(bookmarked ? { color: "#f0c860", borderColor: "#5a4a1f" } : {}) }} aria-label={bookmarked ? "북마크 해제" : "북마크에 저장"}>{bookmarked ? "⭐" : "☆"}</button>}
           </span>
         )}
       </div>
@@ -999,8 +1000,8 @@ function ReviewList({ review, onSpeak, onRemove, onClear, onGoConvo }) {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 17, fontWeight: 800, color: scoreColor(r.accuracy ?? 60) }}>{r.word}</span>
                 {r.accuracy != null && <span style={{ fontSize: 12, color: "#8b90a6" }}>{r.accuracy}점</span>}
-                <button onClick={() => onSpeak(r.word)} style={{ ...phraseBtn, padding: "5px 10px" }}>🔊</button>
-                <button onClick={() => onRemove(i)} style={reviewDel}>×</button>
+                <button onClick={() => onSpeak(r.word)} style={{ ...phraseBtn, padding: "5px 10px" }} aria-label={`${r.word} 발음 듣기`}>🔊</button>
+                <button onClick={() => onRemove(i)} style={reviewDel} aria-label="복습 항목 삭제">×</button>
               </div>
               {r.sentence && <div style={{ fontSize: 12.5, color: "#8b90a6", marginTop: 5 }}>“{r.sentence}”</div>}
             </div>
@@ -1015,7 +1016,7 @@ function ReviewList({ review, onSpeak, onRemove, onClear, onGoConvo }) {
             <div key={i} style={reviewCard}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                 <span style={{ fontSize: 13.5, color: "#eef0f7" }}>“{r.text}”</span>
-                <button onClick={() => onRemove(i)} style={reviewDel}>×</button>
+                <button onClick={() => onRemove(i)} style={reviewDel} aria-label="복습 항목 삭제">×</button>
               </div>
               <div style={{ fontSize: 13, color: "#c7e7a8", marginTop: 6, lineHeight: 1.5 }}>💡 {r.correction}</div>
             </div>
@@ -1047,8 +1048,8 @@ function BookmarkList({ bookmarks, onSpeak, onRemove, onGoConvo }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
             <div style={{ fontSize: 15.5, fontWeight: 700 }}>{b.en}</div>
             <span style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-              <button onClick={() => onSpeak(b.en)} style={{ ...phraseBtn, padding: "5px 9px" }}>🔊</button>
-              <button onClick={() => onRemove(b.en)} style={{ ...phraseBtn, padding: "5px 9px", color: "#f0c860", borderColor: "#5a4a1f" }}>⭐</button>
+              <button onClick={() => onSpeak(b.en)} style={{ ...phraseBtn, padding: "5px 9px" }} aria-label={`${b.en} 발음 듣기`}>🔊</button>
+              <button onClick={() => onRemove(b.en)} style={{ ...phraseBtn, padding: "5px 9px", color: "#f0c860", borderColor: "#5a4a1f" }} aria-label="북마크 삭제">⭐</button>
             </span>
           </div>
           {b.ko && <div style={{ fontSize: 13, color: "#a8adc4", marginTop: 4 }}>{b.ko}</div>}
@@ -1150,7 +1151,7 @@ function PinGate({ onOk }) {
         ))}
         <span />
         <button onClick={() => press("0")} style={pinKey}>0</button>
-        <button onClick={() => setPin((p) => p.slice(0, -1))} style={{ ...pinKey, fontSize: 20, background: "transparent", border: "none" }}>⌫</button>
+        <button onClick={() => setPin((p) => p.slice(0, -1))} style={{ ...pinKey, fontSize: 20, background: "transparent", border: "none" }} aria-label="한 자리 지우기">⌫</button>
       </div>
       <style>{`@keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}`}</style>
     </div>

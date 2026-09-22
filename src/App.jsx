@@ -574,10 +574,10 @@ export default function App() {
         {urlErr && <div style={banner}>⚠️ 회화 서버 주소를 못 불러왔어요. 잠시 후 새로고침해 주세요.</div>}
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "0 18px", marginBottom: 20 }}>
-          <button onClick={() => setHomeMode("convo")} style={{ ...modeTab, ...(homeMode === "convo" ? modeOn : {}) }}>💬 대화</button>
-          <button onClick={() => setHomeMode("lesson")} style={{ ...modeTab, ...(homeMode === "lesson" ? modeOn : {}) }}>📚 레슨</button>
-          <button onClick={() => setHomeMode("review")} style={{ ...modeTab, ...(homeMode === "review" ? modeOn : {}) }}>📒 복습{review.length ? ` ${review.length}` : ""}</button>
-          <button onClick={() => setHomeMode("bookmark")} style={{ ...modeTab, ...(homeMode === "bookmark" ? modeOn : {}) }}>⭐ 북마크{bookmarks.length ? ` ${bookmarks.length}` : ""}</button>
+          <button onClick={() => setHomeMode("convo")} aria-pressed={homeMode === "convo"} style={{ ...modeTab, ...(homeMode === "convo" ? modeOn : {}) }}>💬 대화</button>
+          <button onClick={() => setHomeMode("lesson")} aria-pressed={homeMode === "lesson"} style={{ ...modeTab, ...(homeMode === "lesson" ? modeOn : {}) }}>📚 레슨</button>
+          <button onClick={() => setHomeMode("review")} aria-pressed={homeMode === "review"} style={{ ...modeTab, ...(homeMode === "review" ? modeOn : {}) }}>📒 복습{review.length ? ` ${review.length}` : ""}</button>
+          <button onClick={() => setHomeMode("bookmark")} aria-pressed={homeMode === "bookmark"} style={{ ...modeTab, ...(homeMode === "bookmark" ? modeOn : {}) }}>⭐ 북마크{bookmarks.length ? ` ${bookmarks.length}` : ""}</button>
         </div>
 
         {homeMode === "convo" ? (
@@ -609,7 +609,7 @@ export default function App() {
               <p style={sectionLabel}>난이도</p>
               <div style={{ display: "flex", gap: 8, padding: "0 18px" }}>
                 {LEVELS.map((l) => (
-                  <button key={l.key} onClick={() => setLevel(l.key)} style={{ ...levelBtn, ...(level === l.key ? levelOn : {}) }}>{l.label}</button>
+                  <button key={l.key} onClick={() => setLevel(l.key)} aria-pressed={level === l.key} style={{ ...levelBtn, ...(level === l.key ? levelOn : {}) }}>{l.label}</button>
                 ))}
               </div>
             </section>
@@ -630,7 +630,7 @@ export default function App() {
           <section>
             <div style={{ display: "flex", gap: 6, padding: "0 18px", marginBottom: 14 }}>
               {LESSON_CATS.map((c) => (
-                <button key={c} onClick={() => setLessonCat(c)} style={{ ...catChip, ...(lessonCat === c ? catChipOn : {}) }}>
+                <button key={c} onClick={() => setLessonCat(c)} aria-pressed={lessonCat === c} style={{ ...catChip, ...(lessonCat === c ? catChipOn : {}) }}>
                   {CAT_LABEL[c]}
                 </button>
               ))}
@@ -703,7 +703,7 @@ export default function App() {
 
         <div style={{ display: "flex", gap: 5, padding: "12px 12px 0", overflowX: "auto" }}>
           {STAGES.map((s) => (
-            <button key={s.key} onClick={() => setLessonStage(s.key)} style={{ ...stageTab, ...(lessonStage === s.key ? stageTabOn : {}) }}>{s.label}</button>
+            <button key={s.key} onClick={() => setLessonStage(s.key)} aria-pressed={lessonStage === s.key} style={{ ...stageTab, ...(lessonStage === s.key ? stageTabOn : {}) }}>{s.label}</button>
           ))}
         </div>
 

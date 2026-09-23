@@ -916,7 +916,10 @@ export default function App() {
             {recActive === "chat" ? "■" : "🎤"}
           </button>
         )}
+        {/* placeholder는 입력을 시작하면 사라지고 보조기술이 이름으로 읽어주지 않는다.
+            녹음 중에는 입력칸이 잠기므로 그 사실도 이름에 실어준다. */}
         <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
+          aria-label={recActive === "chat" ? "녹음 중에는 입력할 수 없어요" : "영어로 답장 입력"}
           placeholder={recActive === "chat" ? "녹음 중… ■ 눌러 끝내기" : "영어로 답하기 (또는 🎤 말하기)"} style={textInput} disabled={recActive === "chat"} />
         <button onClick={() => send()} disabled={loading || analyzing || !input.trim()} style={sendBtn} aria-label="메시지 보내기">↑</button>
       </div>
@@ -1097,10 +1100,12 @@ function DictationView({ lesson, speak, onBack, onComplete }) {
               </div>
               {!st.checked ? (
                 <>
+                  {/* 같은 입력칸이 문장 수만큼 반복되므로 번호를 이름에 넣어 구분되게 한다. */}
                   <input value={st.input || ""} onChange={(e) => setState((v) => ({ ...v, [i]: { ...v[i], input: e.target.value } }))}
                     onKeyDown={(e) => e.key === "Enter" && setState((v) => ({ ...v, [i]: { ...v[i], checked: true } }))}
+                    aria-label={`${i + 1}번 문장 받아쓰기 — 들리는 대로 영어로 입력`}
                     placeholder="들리는 대로 영어로 입력" style={{ ...textInput, width: "100%", boxSizing: "border-box", marginBottom: 8 }} />
-                  <button onClick={() => setState((v) => ({ ...v, [i]: { ...v[i], checked: true } }))} style={{ ...phraseBtn, width: "100%" }}>확인</button>
+                  <button onClick={() => setState((v) => ({ ...v, [i]: { ...v[i], checked: true } }))} style={{ ...phraseBtn, width: "100%" }} aria-label={`${i + 1}번 문장 확인`}>확인</button>
                 </>
               ) : (
                 <div>
@@ -1111,7 +1116,7 @@ function DictationView({ lesson, speak, onBack, onComplete }) {
                     ))}
                   </div>
                   {p.ko && <div style={{ fontSize: 12.5, color: "#a8adc4", marginBottom: 8 }}>{p.ko}</div>}
-                  <button onClick={() => setState((v) => ({ ...v, [i]: { input: "", checked: false } }))} style={{ ...phraseBtn }}>다시 풀기</button>
+                  <button onClick={() => setState((v) => ({ ...v, [i]: { input: "", checked: false } }))} style={{ ...phraseBtn }} aria-label={`${i + 1}번 문장 다시 풀기`}>다시 풀기</button>
                 </div>
               )}
             </div>

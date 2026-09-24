@@ -617,7 +617,7 @@ export default function App() {
               <p style={sectionLabel}>상황 고르기</p>
               <div style={grid}>
                 {SCENARIOS.map((s) => (
-                  <button key={s.key} onClick={() => startScenario(s)} disabled={!apiBase} style={scCard}>
+                  <button key={s.key} onClick={() => startScenario(s)} disabled={!apiBase} title={!apiBase ? "서버 연결 중이에요" : undefined} style={{ ...scCard, ...(!apiBase ? notReady : {}) }}>
                     <span style={{ fontSize: 26 }}>{s.emoji}</span>
                     <span style={{ fontSize: 14, fontWeight: 700 }}>{s.label}</span>
                     <span style={{ fontSize: 11, color: "#8b90a6" }}>{s.desc}</span>
@@ -654,7 +654,7 @@ export default function App() {
               {LESSONS.filter((l) => l.cat === lessonCat).map((l) => {
                 const isDone = lessonDone.includes(l.id);
                 return (
-                  <button key={l.id} onClick={() => openLesson(l)} disabled={!apiBase} style={lessonItem}>
+                  <button key={l.id} onClick={() => openLesson(l)} disabled={!apiBase} title={!apiBase ? "서버 연결 중이에요" : undefined} style={{ ...lessonItem, ...(!apiBase ? notReady : {}) }}>
                     <span style={{ fontSize: 24 }}>{l.emoji}</span>
                     <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", flex: 1 }}>
                       <span style={{ fontSize: 15.5, fontWeight: 700 }}>{l.title}</span>
@@ -1175,6 +1175,9 @@ const levelBtn = { flex: 1, padding: "10px 0", borderRadius: 12, border: "1px so
 const levelOn = { background: "#4c6ef5", color: "#fff", borderColor: "#4c6ef5" };
 const grid = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "0 18px 30px" };
 const scCard = { display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textAlign: "center", padding: "16px 8px", borderRadius: 16, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", cursor: "pointer" };
+// 서버 주소를 아직 못 받아온 동안 disabled 인 버튼이 멀쩡해 보여서 눌러도 아무 일이 안 난다.
+// 동작은 그대로 두고 눌리지 않는다는 표시만 얹는다.
+const notReady = { opacity: 0.45, cursor: "not-allowed" };
 const chatHead = { display: "flex", alignItems: "center", padding: "16px 14px", borderBottom: "1px solid #1e2233", position: "sticky", top: 0, background: "#0f1220", zIndex: 2 };
 const backBtn = { width: 34, height: 34, borderRadius: 10, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", fontSize: 18, cursor: "pointer" };
 const chatBody = { flex: 1, overflowY: "auto", padding: "16px 14px 8px", display: "flex", flexDirection: "column", gap: 14 };

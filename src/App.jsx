@@ -876,7 +876,9 @@ export default function App() {
         <div style={{ width: 34 }} />
       </header>
 
-      <div style={chatBody}>
+      {/* 새 말풍선은 화면에만 추가되고 낭독기에는 아무 말도 안 간다.
+          추가된 것만 읽도록 log + polite 로 묶는다. */}
+      <div style={chatBody} role="log" aria-live="polite" aria-relevant="additions" aria-label="대화 내용">
         {messages.map((m, i) => (
           <div key={i}>
             {m.role === "assistant" ? (
@@ -904,7 +906,8 @@ export default function App() {
           </div>
         ))}
         {analyzing && <div style={userRow}><div style={{ ...userBubble, background: "#2a2f47", color: "#a8adc4" }}>🎧 발음 분석 중…</div></div>}
-        {loading && <div style={aiRow}><div style={{ ...aiBubble, color: "#8b90a6" }}>…</div></div>}
+        {/* "…" 는 낭독기가 읽을 말이 없다. 눈으로 보는 점과 읽히는 문장을 따로 둔다. */}
+        {loading && <div style={aiRow}><div style={{ ...aiBubble, color: "#8b90a6" }}><span aria-hidden="true">…</span><span style={srOnly}>AI가 답하는 중</span></div></div>}
         <div ref={bottomRef} />
       </div>
 
@@ -1181,6 +1184,8 @@ const notReady = { opacity: 0.45, cursor: "not-allowed" };
 const chatHead = { display: "flex", alignItems: "center", padding: "16px 14px", borderBottom: "1px solid #1e2233", position: "sticky", top: 0, background: "#0f1220", zIndex: 2 };
 const backBtn = { width: 34, height: 34, borderRadius: 10, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", fontSize: 18, cursor: "pointer" };
 const chatBody = { flex: 1, overflowY: "auto", padding: "16px 14px 8px", display: "flex", flexDirection: "column", gap: 14 };
+// 눈에는 안 보이지만 낭독기에는 읽히는 텍스트 (display:none 이면 안 읽힌다)
+const srOnly = { position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 };
 const aiRow = { display: "flex", justifyContent: "flex-start" };
 const aiBubble = { maxWidth: "82%", background: "#1c2136", borderRadius: "4px 16px 16px 16px", padding: "12px 14px" };
 const koText = { marginTop: 6, fontSize: 13.5, color: "#a8adc4", borderTop: "1px solid #2a2f47", paddingTop: 6 };

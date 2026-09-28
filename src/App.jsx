@@ -767,7 +767,7 @@ export default function App() {
                       {HAS_REC && (
                         <button onClick={recing ? endRec : () => beginRec({ idx, ref: p.en })}
                           disabled={busy || (recActive !== null && !recing)}
-                          style={{ ...phraseBtn, ...(recing ? { background: "#e8503a", color: "#fff", borderColor: "#e8503a" } : {}) }}>
+                          style={{ ...phraseBtn, ...(recing ? { background: "#e0331a", color: "#fff", borderColor: "#e0331a" } : {}) }}>
                           {recing ? "■ 끝내기" : busy ? "분석 중…" : "🎤 따라 말하기"}
                         </button>
                       )}
@@ -1150,7 +1150,7 @@ function PinGate({ onOk }) {
       <p style={{ color: "#8b90a6", fontSize: 14, margin: "10px 0 22px" }}>PIN을 입력하세요</p>
       <div style={{ display: "flex", gap: 14, marginBottom: 30, transform: shake ? "translateX(0)" : "none", animation: shake ? "sh .4s" : "none" }}>
         {[0, 1, 2, 3].map((i) => (
-          <span key={i} style={{ width: 14, height: 14, borderRadius: 999, background: i < pin.length ? "#4c6ef5" : "#262a3d" }} />
+          <span key={i} style={{ width: 14, height: 14, borderRadius: 999, background: i < pin.length ? "#486af5" : "#262a3d" }} />
         ))}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 68px)", gap: 14 }}>
@@ -1175,7 +1175,7 @@ const sub = { color: "#8b90a6", fontSize: 13.5, margin: 0 };
 const banner = { background: "#3a2226", color: "#f3b0b0", padding: "10px 14px", borderRadius: 12, fontSize: 13, margin: "0 18px 14px" };
 const sectionLabel = { color: "#8b90a6", fontSize: 12.5, fontWeight: 700, margin: "0 0 8px 4px", padding: "0 18px" };
 const levelBtn = { flex: 1, padding: "10px 0", borderRadius: 12, border: "1px solid #262a3d", background: "#171b2c", color: "#8b90a6", fontSize: 14, fontWeight: 700, cursor: "pointer" };
-const levelOn = { background: "#4c6ef5", color: "#fff", borderColor: "#4c6ef5" };
+const levelOn = { background: "#486af5", color: "#fff", borderColor: "#486af5" };
 const grid = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "0 18px 30px" };
 const scCard = { display: "flex", flexDirection: "column", alignItems: "center", gap: 4, textAlign: "center", padding: "16px 8px", borderRadius: 16, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", cursor: "pointer" };
 // 서버 주소를 아직 못 받아온 동안 disabled 인 버튼이 멀쩡해 보여서 눌러도 아무 일이 안 난다.
@@ -1191,28 +1191,28 @@ const aiBubble = { maxWidth: "82%", background: "#1c2136", borderRadius: "4px 16
 const koText = { marginTop: 6, fontSize: 13.5, color: "#a8adc4", borderTop: "1px solid #2a2f47", paddingTop: 6 };
 const miniAction = { background: "none", border: "none", color: "#7f9cf5", fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: 0 };
 const userRow = { display: "flex", flexDirection: "column", alignItems: "flex-end" };
-const userBubble = { maxWidth: "82%", background: "#4c6ef5", color: "#fff", borderRadius: "16px 4px 16px 16px", padding: "12px 14px", fontSize: 16 };
+const userBubble = { maxWidth: "82%", background: "#486af5", color: "#fff", borderRadius: "16px 4px 16px 16px", padding: "12px 14px", fontSize: 16 };
 const pronCard = { maxWidth: "82%", marginTop: 6, background: "#161a2b", border: "1px solid #262a3d", borderRadius: 14, padding: "12px 14px" };
 const correctionBox = { maxWidth: "82%", marginTop: 6, background: "#20261c", color: "#c7e7a8", border: "1px solid #33421f", borderRadius: 12, padding: "9px 12px", fontSize: 13, lineHeight: 1.5 };
 const inputBar = { display: "flex", gap: 8, alignItems: "center", padding: "12px 14px", borderTop: "1px solid #1e2233", position: "sticky", bottom: 0, background: "#0f1220" };
 const micBtn = { width: 44, height: 44, flexShrink: 0, borderRadius: 999, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", fontSize: 18, cursor: "pointer" };
-const micOn = { background: "#e8503a", borderColor: "#e8503a", color: "#fff" };
+const micOn = { background: "#e0331a", borderColor: "#e0331a", color: "#fff" };
 const textInput = { flex: 1, background: "#171b2c", border: "1px solid #262a3d", borderRadius: 999, padding: "12px 16px", color: "#eef0f7", fontSize: 15, outline: "none" };
-const sendBtn = { width: 44, height: 44, flexShrink: 0, borderRadius: 999, border: "none", background: "#4c6ef5", color: "#fff", fontSize: 20, fontWeight: 800, cursor: "pointer" };
+const sendBtn = { width: 44, height: 44, flexShrink: 0, borderRadius: 999, border: "none", background: "#486af5", color: "#fff", fontSize: 20, fontWeight: 800, cursor: "pointer" };
 const sttNote = { color: "#8b90a6", fontSize: 11.5, textAlign: "center", padding: "0 18px 12px", margin: 0 };
 const modeTab = { flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid #262a3d", background: "#171b2c", color: "#8b90a6", fontSize: 14, fontWeight: 700, cursor: "pointer" };
-const modeOn = { background: "#4c6ef5", color: "#fff", borderColor: "#4c6ef5" };
+const modeOn = { background: "#486af5", color: "#fff", borderColor: "#486af5" };
 const lessonItem = { display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", cursor: "pointer", textAlign: "left" };
 const phraseCard = { background: "#161a2b", border: "1px solid #262a3d", borderRadius: 14, padding: "14px 16px", marginBottom: 12 };
 const phraseBtn = { border: "1px solid #2f3550", background: "#1c2136", color: "#cdd2e6", fontSize: 13, fontWeight: 700, padding: "8px 12px", borderRadius: 10, cursor: "pointer" };
-const roleplayBtn = { width: "100%", marginTop: 8, padding: "15px 0", borderRadius: 14, border: "none", background: "#4c6ef5", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" };
+const roleplayBtn = { width: "100%", marginTop: 8, padding: "15px 0", borderRadius: 14, border: "none", background: "#486af5", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" };
 const streakBadge = { display: "inline-block", marginTop: 12, background: "#2a1f14", color: "#f0a860", border: "1px solid #4a3418", borderRadius: 999, padding: "6px 16px", fontSize: 13, fontWeight: 700 };
 const reviewCard = { background: "#161a2b", border: "1px solid #262a3d", borderRadius: 12, padding: "12px 14px", marginBottom: 9 };
 const reviewDel = { background: "none", border: "none", color: "#6b7089", fontSize: 18, cursor: "pointer", lineHeight: 1, padding: "0 2px" };
 const catChip = { flex: 1, padding: "9px 0", borderRadius: 10, border: "1px solid #262a3d", background: "#171b2c", color: "#8b90a6", fontSize: 13, fontWeight: 700, cursor: "pointer" };
-const catChipOn = { background: "#2a3358", color: "#cdd7ff", borderColor: "#4c6ef5" };
+const catChipOn = { background: "#2a3358", color: "#cdd7ff", borderColor: "#486af5" };
 const stageTab = { flexShrink: 0, padding: "8px 12px", borderRadius: 10, border: "1px solid #262a3d", background: "#171b2c", color: "#8b90a6", fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" };
-const stageTabOn = { background: "#4c6ef5", color: "#fff", borderColor: "#4c6ef5" };
+const stageTabOn = { background: "#486af5", color: "#fff", borderColor: "#486af5" };
 const noteBox = { marginTop: 8, background: "#161d18", border: "1px solid #2a3a2c", borderRadius: 10, padding: "8px 11px", fontSize: 12.5, color: "#a8cbb0", lineHeight: 1.5 };
 const dailyCard = { background: "linear-gradient(135deg, #241f2e, #1a1d2e)", border: "1px solid #3a2f4a", borderRadius: 16, padding: "16px 16px" };
 const recLessonBtn = { width: "100%", marginTop: 10, padding: "13px 14px", borderRadius: 13, border: "1px solid #2f3550", background: "#171b2c", color: "#cdd7ff", fontSize: 13.5, fontWeight: 700, cursor: "pointer", textAlign: "left" };

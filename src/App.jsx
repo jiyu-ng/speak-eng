@@ -1197,7 +1197,11 @@ const correctionBox = { maxWidth: "82%", marginTop: 6, background: "#20261c", co
 const inputBar = { display: "flex", gap: 8, alignItems: "center", padding: "12px 14px", borderTop: "1px solid #1e2233", position: "sticky", bottom: 0, background: "#0f1220" };
 const micBtn = { width: 44, height: 44, flexShrink: 0, borderRadius: 999, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", fontSize: 18, cursor: "pointer" };
 const micOn = { background: "#e0331a", borderColor: "#e0331a", color: "#fff" };
-const textInput = { flex: 1, background: "#171b2c", border: "1px solid #262a3d", borderRadius: 999, padding: "12px 16px", color: "#eef0f7", fontSize: 15, outline: "none" };
+// 🔴 fontSize 는 16 밑으로 내리지 말 것.
+//    iOS 사파리는 16px 미만 입력칸을 탭하면 화면을 자동으로 확대하고, 그 확대가 풀리지 않는다.
+//    말하기 앱이라 폰에서 쓰는데, 확대되면 채팅 입력바가 화면 밖으로 밀린다.
+//    확인법: 아이폰 사파리에서 입력칸 탭 → 글씨가 커지면 이 값이 16 밑으로 내려간 것.
+const textInput = { flex: 1, background: "#171b2c", border: "1px solid #262a3d", borderRadius: 999, padding: "12px 16px", color: "#eef0f7", fontSize: 16, outline: "none" };
 const sendBtn = { width: 44, height: 44, flexShrink: 0, borderRadius: 999, border: "none", background: "#486af5", color: "#fff", fontSize: 20, fontWeight: 800, cursor: "pointer" };
 const sttNote = { color: "#8b90a6", fontSize: 11.5, textAlign: "center", padding: "0 18px 12px", margin: 0 };
 const modeTab = { flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid #262a3d", background: "#171b2c", color: "#8b90a6", fontSize: 14, fontWeight: 700, cursor: "pointer" };

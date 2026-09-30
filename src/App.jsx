@@ -1148,11 +1148,17 @@ function PinGate({ onOk }) {
     <div style={{ ...wrap, alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
       <div style={{ fontSize: 40 }}>🔒</div>
       <p style={{ color: "#8b90a6", fontSize: 14, margin: "10px 0 22px" }}>PIN을 입력하세요</p>
-      <div style={{ display: "flex", gap: 14, marginBottom: 30, transform: shake ? "translateX(0)" : "none", animation: shake ? "sh .4s" : "none" }}>
+      {/* 🔴 점 네 개는 색만 바뀌어서 화면 낭독기엔 아무 변화가 없다 — 몇 자리 눌렀는지,
+             틀렸는지가 전부 「보이는 것」으로만 전달되고 있었다. 점은 aria-hidden 으로 감추고
+             같은 내용을 글로 읽어준다. 인증 로직(press·PIN 대조)은 건드리지 않는다. */}
+      <div aria-hidden="true" style={{ display: "flex", gap: 14, marginBottom: 30, transform: shake ? "translateX(0)" : "none", animation: shake ? "sh .4s" : "none" }}>
         {[0, 1, 2, 3].map((i) => (
           <span key={i} style={{ width: 14, height: 14, borderRadius: 999, background: i < pin.length ? "#486af5" : "#262a3d" }} />
         ))}
       </div>
+      <span role="status" aria-live="polite" style={srOnly}>
+        {shake ? "PIN이 맞지 않습니다. 처음부터 다시 입력하세요." : `네 자리 중 ${pin.length}자리 입력됨`}
+      </span>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 68px)", gap: 14 }}>
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
           <button key={n} onClick={() => press(String(n))} style={pinKey}>{n}</button>

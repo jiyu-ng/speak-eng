@@ -15,6 +15,22 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="스픽메이트 — AI 영어 스피킹 연습" />
     <meta property="og:description" content="AI 파트너와 영어로 대화하며 스피킹을 연습하는 앱. 상황별 회화 + 실시간 교정." />
+    <style>
+      /* 키보드(Tab)로 옮겨 다닐 때 지금 어디에 있는지 보이게 한다.
+         마우스·터치로 누를 때는 안 뜨므로 평소 화면은 그대로다.
+
+         🔴 링 색을 브랜드색 #486af5 로 두지 말 것 — 같은 색 버튼(보내기·레슨
+            시작·선택된 탭 등 11곳)에 포커스가 가면 대비가 1.00:1 이라 통째로
+            사라진다. #cdd7ff 는 그 버튼 위에서도 3.17:1 이고 앱 배경에서는
+            13.09:1 이다. (2026-10-03 실측, 기존 팔레트에 이미 있는 색)
+
+         ⚠️ 여기에 border-radius 를 넣지 말 것 — 전역 선택자라 둥근 버튼·칩의
+            실제 모양을 덮어쓴다. outline 은 요소의 radius 를 알아서 따라간다. */
+      :focus-visible {
+        outline: 2px solid #cdd7ff;
+        outline-offset: 2px;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

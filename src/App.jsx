@@ -1207,7 +1207,9 @@ const micOn = { background: "#e0331a", borderColor: "#e0331a", color: "#fff" };
 //    iOS 사파리는 16px 미만 입력칸을 탭하면 화면을 자동으로 확대하고, 그 확대가 풀리지 않는다.
 //    말하기 앱이라 폰에서 쓰는데, 확대되면 채팅 입력바가 화면 밖으로 밀린다.
 //    확인법: 아이폰 사파리에서 입력칸 탭 → 글씨가 커지면 이 값이 16 밑으로 내려간 것.
-const textInput = { flex: 1, background: "#171b2c", border: "1px solid #262a3d", borderRadius: 999, padding: "12px 16px", color: "#eef0f7", fontSize: 16, outline: "none" };
+// outline 을 여기서 끄지 않는다 — 인라인 스타일은 CSS 를 덮으므로 index.html 의
+// :focus-visible 규칙이 이 입력칸에서만 안 먹었다. 포커스 링은 거기서 관리한다.
+const textInput = { flex: 1, background: "#171b2c", border: "1px solid #262a3d", borderRadius: 999, padding: "12px 16px", color: "#eef0f7", fontSize: 16 };
 const sendBtn = { width: 44, height: 44, flexShrink: 0, borderRadius: 999, border: "none", background: "#486af5", color: "#fff", fontSize: 20, fontWeight: 800, cursor: "pointer" };
 const sttNote = { color: "#8b90a6", fontSize: 11.5, textAlign: "center", padding: "0 18px 12px", margin: 0 };
 const modeTab = { flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid #262a3d", background: "#171b2c", color: "#8b90a6", fontSize: 14, fontWeight: 700, cursor: "pointer" };

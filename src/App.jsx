@@ -1167,7 +1167,15 @@ function PinGate({ onOk }) {
         <button onClick={() => press("0")} style={pinKey}>0</button>
         <button onClick={() => setPin((p) => p.slice(0, -1))} style={{ ...pinKey, fontSize: 20, background: "transparent", border: "none" }} aria-label="한 자리 지우기">⌫</button>
       </div>
-      <style>{`@keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}`}</style>
+      {/* 흔들림은 「동작 줄이기」를 켠 사람에겐 안 돌게 한다 — 좌우로 튀는 모션은
+          어지럼을 느끼는 사람이 꺼두는 대상이다.
+          🔧 끄는 자리를 인라인(1154행 animation)이 아니라 여기로 둔 이유 — 인라인 스타일은
+             CSS 미디어쿼리가 못 덮는다. 같은 이름의 keyframes 를 미디어쿼리 안에서 다시
+             선언하면 그쪽이 이겨서, 인라인은 그대로 둔 채 동작만 멈춘다.
+          📌 흔들림이 없어도 시각 피드백은 남는다 — 틀리면 setPin("") 이라 점 네 개가
+             한꺼번에 꺼진다(1144행). 그래서 이 변경으로 「틀렸다」가 안 보이게 되지는 않는다. */}
+      <style>{`@keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@media (prefers-reduced-motion: reduce){@keyframes sh{0%,100%{transform:translateX(0)}}}`}</style>
     </div>
   );
 }

@@ -1159,6 +1159,17 @@ function PinGate({ onOk }) {
       <span role="status" aria-live="polite" style={srOnly}>
         {shake ? "PIN이 맞지 않습니다. 처음부터 다시 입력하세요." : `네 자리 중 ${pin.length}자리 입력됨`}
       </span>
+      {/* 🔴 「틀렸다」가 srOnly 라 화면에는 없었다. 동작 줄이기를 켠 사람에게는 점 네 개가
+             꺼지는 것만 남는데, 그건 「내가 지웠다」와 구분이 안 된다.
+          ⚠️ 색으로 알리지 않는다 — 기존 빨강 #e0331a 와 현재 파랑 #486af5 의 명도 대비가
+             1.00:1 이라 색각 이상·흑백 화면에서 같은 회색이 된다(2026-10-05 재측정).
+             그래서 신호를 **글자**로 두고 색은 보조로만 쓴다.
+          🔧 자리를 미리 비워 둔다 — 문구가 나타날 때 아래 키패드가 밀리면 누르던 자리가
+             움직인다. 글자색 #f3b0b0 은 banner 에서 이미 쓰는 값이고 배경 #0f1220 과
+             10.33:1 이라 본문 기준(4.5:1)을 넘는다. */}
+      <div style={{ minHeight: 18, marginBottom: 12, display: "flex", alignItems: "center" }}>
+        {shake && <span aria-hidden="true" style={pinError}>PIN이 맞지 않습니다</span>}
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 68px)", gap: 14 }}>
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
           <button key={n} onClick={() => press(String(n))} style={pinKey}>{n}</button>
@@ -1179,6 +1190,9 @@ function PinGate({ onOk }) {
     </div>
   );
 }
+// 틀렸을 때 화면에 보이는 신호. 색이 아니라 글자가 신호라서, 색각 이상·흑백에서도
+// 「틀렸다」가 전달된다. 색은 보조이고 대비는 배경 #0f1220 기준 10.33:1.
+const pinError = { color: "#f3b0b0", fontSize: 13, fontWeight: 600 };
 const pinKey = { width: 68, height: 68, borderRadius: 999, border: "1px solid #262a3d", background: "#171b2c", color: "#eef0f7", fontSize: 24, fontWeight: 700, cursor: "pointer" };
 
 // ── 스타일 ──
